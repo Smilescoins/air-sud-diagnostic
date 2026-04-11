@@ -11,8 +11,8 @@ body { font-family: Arial; background:#f5f5f5; padding:20px; }
 input, textarea { width:100%; padding:10px; margin:5px 0; }
 button { width:100%; padding:12px; background:orange; border:none; color:white; font-weight:bold; }
 </style>
-
 </head>
+
 <body>
 
 <h2>Air Sud Éco-Confort</h2>
@@ -29,7 +29,7 @@ button { width:100%; padding:12px; background:orange; border:none; color:white; 
 
 <button onclick="diagnostic()">Lancer diagnostic</button>
 
-<p id="result"></p>
+<pre id="result"></pre>
 </div>
 
 <div class="card">
@@ -38,9 +38,9 @@ button { width:100%; padding:12px; background:orange; border:none; color:white; 
 <input id="client" placeholder="Nom client">
 <input id="adresse" placeholder="Adresse">
 
-<textarea id="rapport" rows="5"></textarea>
+<textarea id="rapport" rows="10"></textarea>
 
-<button onclick="generate()">Générer fiche</button>
+<button onclick="generate()">📄 Générer rapport complet</button>
 </div>
 
 <script>
@@ -64,40 +64,40 @@ function diagnostic(){
  else{
 
    if(bp<3 && hp<10){
-     res += "🔴 Manque de fluide probable\\n👉 Vérifier fuite\\n👉 Test azote\\n\\n";
+     res += "🔴 Manque de fluide probable\n👉 Vérifier fuite\n👉 Test azote\n\n";
    }
 
    if(bp<3 && hp>=12){
-     res += "❄️ Problème évaporateur / KVP\\n👉 Vérifier détendeur / air\\n\\n";
+     res += "❄️ Problème évaporateur / KVP\n👉 Vérifier détendeur / air\n\n";
    }
 
    if(bp>=4 && hp<10){
-     res += "🔥 Problème condensation / KVR\\n👉 Vérifier ventilateur\\n\\n";
+     res += "🔥 Problème condensation / KVR\n👉 Vérifier ventilateur\n\n";
    }
 
    if(bp>6 && hp<12){
-     res += "⚠️ Compresseur fatigué\\n👉 Mauvaise compression\\n\\n";
+     res += "⚠️ Compresseur fatigué\n👉 Mauvaise compression\n\n";
    }
 
    if(hp>20){
-     res += "🔥 Condenseur encrassé\\n👉 Nettoyage nécessaire\\n\\n";
+     res += "🔥 Condenseur encrassé\n👉 Nettoyage nécessaire\n\n";
    }
 
    if(!isNaN(delta)){
      if(delta < 5){
-       res += "🌡️ Mauvais rendement\\n\\n";
+       res += "🌡️ Mauvais rendement\n\n";
      }
      else if(delta >=8){
-       res += "✅ Bon rendement\\n\\n";
+       res += "✅ Bon rendement\n\n";
      }
    }
 
    if(!isNaN(amp)){
      if(amp < 3){
-       res += "⚡ Intensité faible\\n";
+       res += "⚡ Intensité faible\n";
      }
      else if(amp > 8){
-       res += "⚡ Intensité élevée\\n";
+       res += "⚡ Intensité élevée\n";
      }
    }
 
@@ -107,12 +107,39 @@ function diagnostic(){
 }
 
 function generate(){
- let txt = "Entreprise : Air Sud Éco-Confort\\n";
- txt += "Client: " + document.getElementById("client").value + "\\n";
- txt += "Adresse: " + document.getElementById("adresse").value + "\\n";
- txt += "BP: " + document.getElementById("bp").value + "\\n";
- txt += "HP: " + document.getElementById("hp").value + "\\n";
- txt += "Diagnostic: " + document.getElementById("result").innerText;
+
+ let client = document.getElementById("client").value;
+ let adresse = document.getElementById("adresse").value;
+ let bp = document.getElementById("bp").value;
+ let hp = document.getElementById("hp").value;
+ let amp = document.getElementById("amp").value;
+ let amb = document.getElementById("amb").value;
+ let souff = document.getElementById("souf").value;
+ let diag = document.getElementById("result").innerText;
+
+ let date = new Date().toLocaleString();
+
+ let txt = "";
+
+ txt += "===== RAPPORT D'INTERVENTION =====\n\n";
+ txt += "Entreprise : Air Sud Éco-Confort\n\n";
+ txt += "Date : " + date + "\n\n";
+ txt += "Client : " + client + "\n";
+ txt += "Adresse : " + adresse + "\n\n";
+
+ txt += "BP : " + bp + " bar\n";
+ txt += "HP : " + hp + " bar\n";
+ txt += "Intensité : " + amp + " A\n";
+ txt += "Température ambiante : " + amb + " °C\n";
+ txt += "Température soufflage : " + souff + " °C\n\n";
+
+ txt += "DIAGNOSTIC :\n" + diag + "\n\n";
+
+ txt += "Conclusion : Etat de l'installation antérieur à l'intervention.\n";
+ txt += "Aucune responsabilité engagée.\n\n";
+
+ txt += "Signature technicien : __________\n";
+ txt += "Signature client : __________\n";
 
  document.getElementById("rapport").value = txt;
 }
