@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Air Sud Éco-Confort</title>
+
+<style>
+body { font-family: Arial; background:#f5f5f5; padding:20px; }
+.card { background:white; padding:15px; margin-bottom:15px; border-radius:10px; }
+input, textarea { width:100%; padding:10px; margin:5px 0; }
+button { width:100%; padding:12px; background:orange; border:none; color:white; font-weight:bold; }
+</style>
+
+</head>
+<body>
+
+<h2>Air Sud Éco-Confort</h2>
+<p><i>Un partenaire de confiance avant tout</i></p>
+
+<div class="card">
+<h3>Diagnostic</h3>
+
+<input id="bp" placeholder="BP (bar)">
+<input id="hp" placeholder="HP (bar)">
+<input id="amp" placeholder="Intensité">
+<input id="amb" placeholder="Température ambiante">
+<input id="souf" placeholder="Température soufflage">
+
+<button onclick="diagnostic()">Lancer diagnostic</button>
+
+<p id="result"></p>
+</div>
+
+<div class="card">
+<h3>Fiche client</h3>
+
+<input id="client" placeholder="Nom client">
+<input id="adresse" placeholder="Adresse">
+
+<textarea id="rapport" rows="5"></textarea>
+
+<button onclick="generate()">Générer fiche</button>
+</div>
+
+<script>
+
+function diagnostic(){
+ let bp = parseFloat(document.getElementById("bp").value);
+ let hp = parseFloat(document.getElementById("hp").value);
+
+ let res = "OK";
+
+ if(bp<3 && hp<10) res="Manque de fluide";
+ else if(bp<3 && hp>=12) res="KVP";
+ else if(bp>=4 && hp<10) res="KVR";
+ else if(bp>6 && hp<12) res="Compresseur fatigué";
+
+ document.getElementById("result").innerText = res;
+}
+
+function generate(){
+ let txt = "Entreprise : Air Sud Éco-Confort\\n";
+ txt += "Client: " + document.getElementById("client").value + "\\n";
+ txt += "Adresse: " + document.getElementById("adresse").value + "\\n";
+ txt += "BP: " + document.getElementById("bp").value + "\\n";
+ txt += "HP: " + document.getElementById("hp").value + "\\n";
+ txt += "Diagnostic: " + document.getElementById("result").innerText;
+
+ document.getElementById("rapport").value = txt;
+}
+
+</script>
+
+</body>
+</html>
