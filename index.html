@@ -46,15 +46,62 @@ button { width:100%; padding:12px; background:orange; border:none; color:white; 
 <script>
 
 function diagnostic(){
+
  let bp = parseFloat(document.getElementById("bp").value);
  let hp = parseFloat(document.getElementById("hp").value);
+ let amp = parseFloat(document.getElementById("amp").value);
+ let amb = parseFloat(document.getElementById("amb").value);
+ let souff = parseFloat(document.getElementById("souf").value);
 
- let res = "OK";
+ let delta = amb - souff;
 
- if(bp<3 && hp<10) res="Manque de fluide";
- else if(bp<3 && hp>=12) res="KVP";
- else if(bp>=4 && hp<10) res="KVR";
- else if(bp>6 && hp<12) res="Compresseur fatigué";
+ let res = "";
+
+ if(isNaN(bp) || isNaN(hp)){
+   res="⚠️ Renseigne BP et HP minimum";
+ }
+
+ else{
+
+   if(bp<3 && hp<10){
+     res += "🔴 Manque de fluide probable\\n👉 Vérifier fuite\\n👉 Test azote\\n\\n";
+   }
+
+   if(bp<3 && hp>=12){
+     res += "❄️ Problème évaporateur / KVP\\n👉 Vérifier détendeur / air\\n\\n";
+   }
+
+   if(bp>=4 && hp<10){
+     res += "🔥 Problème condensation / KVR\\n👉 Vérifier ventilateur\\n\\n";
+   }
+
+   if(bp>6 && hp<12){
+     res += "⚠️ Compresseur fatigué\\n👉 Mauvaise compression\\n\\n";
+   }
+
+   if(hp>20){
+     res += "🔥 Condenseur encrassé\\n👉 Nettoyage nécessaire\\n\\n";
+   }
+
+   if(!isNaN(delta)){
+     if(delta < 5){
+       res += "🌡️ Mauvais rendement\\n\\n";
+     }
+     else if(delta >=8){
+       res += "✅ Bon rendement\\n\\n";
+     }
+   }
+
+   if(!isNaN(amp)){
+     if(amp < 3){
+       res += "⚡ Intensité faible\\n";
+     }
+     else if(amp > 8){
+       res += "⚡ Intensité élevée\\n";
+     }
+   }
+
+ }
 
  document.getElementById("result").innerText = res;
 }
