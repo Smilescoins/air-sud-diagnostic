@@ -14,7 +14,6 @@ body {
 }
 
 h2 { color: #3b82f6; }
-.orange { color: orange; }
 
 .card {
   background: #1e293b;
@@ -38,15 +37,16 @@ button {
   border: none;
   border-radius: 5px;
   font-weight: bold;
-  cursor: pointer;
 }
 
-.btn-orange { background: orange; color: white; }
-.btn-blue { background: #3b82f6; color: white; }
-.btn-green { background: #22c55e; color: white; }
+.btn-orange { background: orange; }
+.btn-blue { background: #3b82f6; }
+.btn-green { background: #22c55e; }
 
-pre {
-  white-space: pre-wrap;
+canvas {
+  background: white;
+  border-radius: 5px;
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -54,7 +54,6 @@ pre {
 <body>
 
 <h2>Air Sud Éco-Confort</h2>
-<p class="orange">📞 07 71 13 65 48</p>
 <p>Un partenaire de confiance avant tout</p>
 
 <div class="card">
@@ -80,117 +79,100 @@ pre {
 <textarea id="rapport" rows="10"></textarea>
 
 <button class="btn-blue" onclick="generate()">📄 Générer rapport</button>
-<button class="btn-green" onclick="printRapport()">🖨️ PDF / Impression</button>
-<button class="btn-orange" onclick="sendWhatsApp()">📲 Envoyer WhatsApp</button>
+<button class="btn-green" onclick="printRapport()">🖨️ PDF</button>
+<button class="btn-orange" onclick="sendWhatsApp()">📲 WhatsApp</button>
+
+<h3>Signature client</h3>
+
+<canvas id="signature" width="300" height="150"></canvas>
+
+<button onclick="clearSignature()">Effacer signature</button>
+
 </div>
 
 <script>
 
-function diagnostic(){
+// SIGNATURE
+let canvas = document.getElementById("signature");
+let ctx = canvas.getContext("2d");
+let drawing = false;
 
+canvas.addEventListener("mousedown", () => drawing = true);
+canvas.addEventListener("mouseup", () => drawing = false);
+canvas.addEventListener("mousemove", draw);
+
+canvas.addEventListener("touchstart", () => drawing = true);
+canvas.addEventListener("touchend", () => drawing = false);
+canvas.addEventListener("touchmove", drawTouch);
+
+function draw(e){
+  if(!drawing) return;
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "black";
+
+  ctx.lineTo(e.offsetX, e.offsetY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(e.offsetX, e.offsetY);
+}
+
+function drawTouch(e){
+  e.preventDefault();
+  if(!drawing) return;
+
+  let rect = canvas.getBoundingClientRect();
+  let x = e.touches[0].clientX - rect.left;
+  let y = e.touches[0].clientY - rect.top;
+
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+}
+
+function clearSignature(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// DIAGNOSTIC
+function diagnostic(){
  let bp = parseFloat(document.getElementById("bp").value);
  let hp = parseFloat(document.getElementById("hp").value);
- let amp = parseFloat(document.getElementById("amp").value);
- let amb = parseFloat(document.getElementById("amb").value);
- let souff = parseFloat(document.getElementById("souf").value);
 
- let delta = amb - souff;
  let res = "";
 
- if(isNaN(bp) || isNaN(hp)){
-   res="⚠️ Renseigne BP et HP minimum";
- }
-
- else{
-
-   if(bp<3 && hp<10){
-     res += "🔴 Manque de fluide probable\n👉 Vérifier fuite + test azote\n\n";
-   }
-
-   if(bp<3 && hp>=12){
-     res += "❄️ Problème évaporateur / KVP\n\n";
-   }
-
-   if(bp>=4 && hp<10){
-     res += "🔥 Problème condensation / KVR\n\n";
-   }
-
-   if(bp>6 && hp<12){
-     res += "⚠️ Compresseur fatigué (déjà usé)\n\n";
-   }
-
-   if(hp>20){
-     res += "🔥 Condenseur encrassé\n\n";
-   }
-
-   if(!isNaN(delta)){
-     if(delta < 5){
-       res += "🌡️ Mauvais rendement\n";
-     }
-     else if(delta >=8){
-       res += "✅ Bon rendement\n";
-     }
-   }
-
-   if(!isNaN(amp)){
-     if(amp < 3){
-       res += "⚡ Intensité faible\n";
-     }
-     else if(amp > 8){
-       res += "⚡ Intensité élevée\n";
-     }
-   }
-
- }
+ if(bp<3 && hp<10) res="🔴 Manque de fluide";
+ else if(bp<3 && hp>=12) res="❄️ Problème évaporateur";
+ else if(bp>=4 && hp<10) res="🔥 Problème condensation";
+ else if(bp>6 && hp<12) res="⚠️ Compresseur fatigué";
 
  document.getElementById("result").innerText = res;
 }
 
+// RAPPORT
 function generate(){
-
- let client = document.getElementById("client").value;
- let adresse = document.getElementById("adresse").value;
- let bp = document.getElementById("bp").value;
- let hp = document.getElementById("hp").value;
- let amp = document.getElementById("amp").value;
- let amb = document.getElementById("amb").value;
- let souff = document.getElementById("souf").value;
- let diag = document.getElementById("result").innerText;
-
- let date = new Date().toLocaleString();
-
- let txt = "";
-
- txt += "===== RAPPORT AIR SUD ÉCO-CONFORT =====\n\n";
- txt += "Date : " + date + "\n\n";
- txt += "Client : " + client + "\n";
- txt += "Adresse : " + adresse + "\n\n";
-
- txt += "BP : " + bp + " bar\n";
- txt += "HP : " + hp + " bar\n";
- txt += "Intensité : " + amp + " A\n";
- txt += "Température ambiante : " + amb + " °C\n";
- txt += "Température soufflage : " + souff + " °C\n\n";
-
- txt += "DIAGNOSTIC :\n" + diag + "\n";
-
- txt += "Conclusion : état antérieur à l’intervention.\n";
+ let txt = "Rapport client\n\n";
+ txt += "Client : " + document.getElementById("client").value + "\n";
+ txt += "Diagnostic : " + document.getElementById("result").innerText + "\n";
+ txt += "\nConclusion : état antérieur à l’intervention.";
 
  document.getElementById("rapport").value = txt;
 }
 
+// PDF
 function printRapport(){
-  let contenu = document.getElementById("rapport").value;
-  let fenetre = window.open("", "", "width=600,height=600");
-  fenetre.document.write("<pre>" + contenu + "</pre>");
-  fenetre.document.close();
-  fenetre.print();
+ let contenu = document.getElementById("rapport").value;
+ let win = window.open();
+ win.document.write("<pre>"+contenu+"</pre>");
+ win.print();
 }
 
+// WHATSAPP
 function sendWhatsApp(){
-  let texte = document.getElementById("rapport").value;
-  let url = "https://wa.me/?text=" + encodeURIComponent(texte);
-  window.open(url, "_blank");
+ let texte = document.getElementById("rapport").value;
+ let url = "https://wa.me/?text=" + encodeURIComponent(texte);
+ window.open(url);
 }
 
 </script>
