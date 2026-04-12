@@ -1,234 +1,1373 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Air Sud Éco-Confort</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Air Sud Éco-Confort - Expert HVAC</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #334155;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --blue: #3b82f6;
+      --orange: #f97316;
+      --green: #22c55e;
+      --red: #ef4444;
+      --border: #475569;
+    }
 
-<style>
-body { font-family: Arial; margin:0; background:#0f172a; color:white; }
-.nav { display:flex; }
-.nav button { flex:1; padding:12px; border:none; background:#1e293b; color:white; }
-.section { display:none; padding:15px; }
-.active { display:block; }
-input, textarea, select { width:100%; padding:10px; margin:5px 0; }
-button { padding:10px; margin-top:5px; width:100%; }
-canvas { background:white; }
-pre { white-space: pre-wrap; }
-</style>
+    * { box-sizing: border-box; }
 
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .topbar {
+      padding: 16px;
+      background: linear-gradient(90deg, var(--blue), var(--orange));
+      color: white;
+      text-align: center;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .topbar p {
+      margin: 6px 0 0;
+      font-size: 14px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 6px;
+      padding: 10px;
+      background: #111827;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      overflow-x: auto;
+    }
+
+    .nav button {
+      flex: 1 1 auto;
+      min-width: 120px;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-weight: bold;
+      background: var(--panel);
+      color: white;
+      cursor: pointer;
+    }
+
+    .nav button.active-tab {
+      background: var(--orange);
+    }
+
+    .section {
+      display: none;
+      padding: 14px;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card h2, .card h3, .card h4 {
+      margin-top: 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 700px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      display: block;
+      margin: 6px 0 4px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: #111827;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .check-row {
+      display: block;
+      padding: 8px 10px;
+      margin: 6px 0;
+      border-radius: 10px;
+      background: var(--panel-2);
+      color: white;
+    }
+
+    .check-row input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+      transform: scale(1.1);
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+    }
+
+    .btn-blue { background: var(--blue); }
+    .btn-orange { background: var(--orange); }
+    .btn-green { background: var(--green); }
+    .btn-red { background: var(--red); }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #0b1220;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      color: #e5e7eb;
+      overflow-x: auto;
+    }
+
+    .result-block {
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      margin: 2px 6px 2px 0;
+    }
+
+    .badge-blue { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .badge-orange { background: rgba(249,115,22,0.2); color: #fdba74; }
+    .badge-green { background: rgba(34,197,94,0.2); color: #86efac; }
+    .badge-red { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      touch-action: none;
+    }
+
+    .signature-wrap {
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    img.preview {
+      width: 100%;
+      max-width: 420px;
+      display: block;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: white;
+    }
+
+    .history-item {
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .history-item h4 {
+      margin: 0 0 6px;
+    }
+
+    .service-line {
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin: 6px 0;
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .inline-actions .btn {
+      flex: 1 1 160px;
+      width: auto;
+    }
+
+    .hr {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="topbar">
+    <h1>Air Sud Éco-Confort</h1>
+    <p>Un partenaire de confiance avant tout</p>
+    <p>Entretien & maintenance des climatisations • 34350 Valras-Plage • 07 71 13 65 48</p>
+  </div>
 
-<div class="nav">
-<button onclick="show('diag')">🔧 Diagnostic</button>
-<button onclick="show('dep')">⚡ Dépannage</button>
-<button onclick="show('doc')">📋 Intervention</button>
-<button onclick="show('hist')">📂 Historique</button>
-</div>
+  <div class="nav">
+    <button class="active-tab" onclick="showTab('tab-diagnostic', this)">🔧 Diagnostic</button>
+    <button onclick="showTab('tab-depannage', this)">⚡ Dépannage</button>
+    <button onclick="showTab('tab-document', this)">📋 Intervention</button>
+    <button onclick="showTab('tab-history', this)">📂 Historique</button>
+  </div>
 
-<!-- DIAGNOSTIC -->
-<div id="diag" class="section active">
-<h3>Diagnostic complet</h3>
+  <!-- DIAGNOSTIC -->
+  <section id="tab-diagnostic" class="section active">
+    <div class="card">
+      <h2>Diagnostic expert croisé</h2>
+      <div class="grid-3">
+        <div>
+          <label>BP (bar)</label>
+          <input id="diag_bp" type="number" step="0.1" placeholder="Ex : 2.5">
+        </div>
+        <div>
+          <label>HP (bar)</label>
+          <input id="diag_hp" type="number" step="0.1" placeholder="Ex : 12">
+        </div>
+        <div>
+          <label>Intensité mesurée (A)</label>
+          <input id="diag_amp" type="number" step="0.1" placeholder="Ex : 3">
+        </div>
+        <div>
+          <label>Intensité nominale (A) - optionnel</label>
+          <input id="diag_amp_nom" type="number" step="0.1" placeholder="Ex : 6">
+        </div>
+        <div>
+          <label>Température ambiante (°C)</label>
+          <input id="diag_amb" type="number" step="0.1" placeholder="Ex : 30">
+        </div>
+        <div>
+          <label>Température soufflage (°C)</label>
+          <input id="diag_souf" type="number" step="0.1" placeholder="Ex : 22">
+        </div>
+      </div>
 
-<input id="bp" placeholder="BP">
-<input id="hp" placeholder="HP">
-<input id="amp" placeholder="Intensité">
-<input id="ampNom" placeholder="Intensité normale">
-<input id="amb" placeholder="Temp ambiante">
-<input id="souf" placeholder="Soufflage">
+      <div class="grid-2">
+        <div>
+          <label>Symptôme client principal</label>
+          <select id="diag_symptom">
+            <option value="">Choisir</option>
+            <option value="plus_de_froid">Plus de froid</option>
+            <option value="souffle_sans_froid">Souffle sans froid</option>
+            <option value="pas_demarrage">Pas de démarrage</option>
+            <option value="disjoncte">Disjoncte</option>
+            <option value="marche_aleatoire">Fonctionnement aléatoire</option>
+            <option value="ventil_seul">Ventilation seule</option>
+          </select>
+        </div>
+        <div>
+          <label>État alimentation machine</label>
+          <select id="diag_power_state">
+            <option value="">Choisir</option>
+            <option value="unknown">Non vérifié</option>
+            <option value="no_power">Pas de tension arrivée</option>
+            <option value="power_ok_no_reaction">Tension OK mais pas de réaction</option>
+            <option value="power_ok_machine_runs">Tension OK et machine fonctionne</option>
+          </select>
+        </div>
+      </div>
 
-<button onclick="diagnostic()">Analyser</button>
+      <div class="hr"></div>
 
-<pre id="diagRes"></pre>
-</div>
+      <h3>Checklist visuelle</h3>
+      <label class="check-row"><input type="checkbox" id="vis_condenseur_sale"> Condenseur encrassé</label>
+      <label class="check-row"><input type="checkbox" id="vis_evaporateur_sale"> Évaporateur encrassé</label>
+      <label class="check-row"><input type="checkbox" id="vis_ventil_ue_hs"> Ventilateur UE ne tourne pas</label>
+      <label class="check-row"><input type="checkbox" id="vis_ventil_ui_hs"> Ventilateur UI ne tourne pas / débit très faible</label>
+      <label class="check-row"><input type="checkbox" id="vis_givre"> Présence de givre</label>
+      <label class="check-row"><input type="checkbox" id="vis_bruit"> Bruit anormal</label>
+      <label class="check-row"><input type="checkbox" id="vis_huile"> Trace d’huile / suspicion fuite visible</label>
+      <label class="check-row"><input type="checkbox" id="vis_corrosion"> Corrosion / environnement agressif</label>
+      <label class="check-row"><input type="checkbox" id="vis_bzzz"> Bourdonnement / “bzzz” au démarrage</label>
 
-<!-- DEPANNAGE -->
-<div id="dep" class="section">
-<h3>Dépannage électrique</h3>
+      <button class="btn btn-orange" onclick="runExpertDiagnostic()">Lancer diagnostic expert</button>
 
-<select id="panne">
-<option value="">Choisir panne</option>
-<option value="ventil">Ventilateur UE HS</option>
-<option value="comp">Compresseur ne démarre pas</option>
-<option value="alim">Pas d’alimentation</option>
-<option value="intensite">Intensité anormale</option>
-</select>
+      <div class="result-block">
+        <div id="diag_summary_badges"></div>
+        <pre id="diag_result">Le résultat apparaîtra ici.</pre>
+      </div>
+    </div>
+  </section>
 
-<button onclick="depannage()">Afficher</button>
-<pre id="depRes"></pre>
-</div>
+  <!-- DEPANNAGE -->
+  <section id="tab-depannage" class="section">
+    <div class="card">
+      <h2>Dépannage électrique guidé</h2>
+      <label>Type de panne</label>
+      <select id="repair_issue">
+        <option value="">Choisir une panne</option>
+        <option value="no_power">Pas d’alimentation</option>
+        <option value="compressor_no_start">Compresseur ne démarre pas</option>
+        <option value="fan_ue_no_start">Ventilateur UE ne tourne pas</option>
+        <option value="fan_ui_no_start">Ventilateur UI ne tourne pas</option>
+        <option value="hard_start_buzz">Démarrage difficile / bzzz</option>
+        <option value="abnormal_current">Intensité anormale</option>
+        <option value="board_suspect">Carte électronique suspecte</option>
+      </select>
 
-<!-- DOCUMENT UNIQUE -->
-<div id="doc" class="section">
+      <button class="btn btn-blue" onclick="runRepairGuide()">Afficher le diagnostic guidé</button>
 
-<h3>Document intervention / devis</h3>
+      <div class="result-block">
+        <pre id="repair_result">Le guidage étape par étape apparaîtra ici.</pre>
+      </div>
+    </div>
+  </section>
 
-<input id="client" placeholder="Client">
-<input id="adresse" placeholder="Adresse">
+  <!-- DOCUMENT UNIQUE -->
+  <section id="tab-document" class="section">
+    <div class="card">
+      <h2>Document unique : devis = bon d’acceptation = intervention</h2>
 
-<label><input type="checkbox" data-price="110"> Entretien mono</label>
+      <div class="grid-2">
+        <div>
+          <label>Client</label>
+          <input id="doc_client" placeholder="Nom du client">
+        </div>
+        <div>
+          <label>Email client</label>
+          <input id="doc_email" type="email" placeholder="client@email.fr">
+        </div>
+        <div>
+          <label>Adresse</label>
+          <input id="doc_address" placeholder="Adresse complète">
+        </div>
+        <div>
+          <label>Date</label>
+          <input id="doc_date" type="datetime-local">
+        </div>
+      </div>
 
-<label><input type="checkbox" id="multiCheck"> Multisplit</label>
-<input id="nbUI" placeholder="Nb UI">
+      <div class="hr"></div>
 
-<label><input type="checkbox" data-price="90"> Recherche fuite</label>
-<label><input type="checkbox" data-price="60"> Recharge MO</label>
-<label><input type="checkbox" data-price="150"> Dépannage électrique</label>
-<label><input type="checkbox" data-price="110"> Anticorrosion</label>
+      <h3>Prestations</h3>
 
-<label><input type="checkbox" data-price="60"> Condensateur</label>
-<label><input type="checkbox" data-price="20"> Fusible</label>
-<label><input type="checkbox" data-price="15"> Connectique</label>
-<label><input type="checkbox" data-price="40"> Schrader</label>
-<label><input type="checkbox" data-price="80"> Brasure</label>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Entretien monosplit" data-price="110">
+        Entretien monosplit — 110 €
+      </label>
 
-<input id="fluide" placeholder="Fluide €">
+      <div class="service-line">
+        <label class="check-row" style="background:transparent;padding:0;margin:0;">
+          <input type="checkbox" id="svc_multisplit_check">
+          Entretien multisplit
+        </label>
+        <label>Nombre d’unités intérieures (UI)</label>
+        <input id="svc_multisplit_ui" type="number" min="2" step="1" placeholder="Ex : 3">
+        <div class="small">Calcul automatique : 2 UI = 160 €, puis +50 € par UI supplémentaire</div>
+      </div>
 
-<h3>Total : <span id="total">0 €</span></h3>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Recherche de fuite" data-price="90">
+        Recherche de fuite — 90 €
+      </label>
 
-<p>
-Le client accepte la réalisation immédiate des travaux et le paiement à la fin.
-</p>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Recharge fluide main-d’œuvre" data-price="60">
+        Recharge fluide main-d’œuvre — 60 €
+      </label>
 
-<h4>Signature client</h4>
-<canvas id="sigClient" width="300" height="150"></canvas>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Diagnostic / dépannage électrique" data-price="150">
+        Diagnostic / dépannage électrique — 150 €
+      </label>
 
-<h4>Signature technicien</h4>
-<canvas id="sigTech" width="300" height="150"></canvas>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Traitement anticorrosion" data-price="110">
+        Traitement anticorrosion — 110 €
+      </label>
 
-<button onclick="calc()">Calculer</button>
-<button onclick="save()">💾 Enregistrer</button>
-<button onclick="pdf()">📄 PDF</button>
-<button onclick="wa()">📲 WhatsApp</button>
-<button onclick="mail()">📧 Mail</button>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Remplacement condensateur" data-price="60">
+        Remplacement condensateur — 60 €
+      </label>
 
-</div>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Remplacement fusible" data-price="20">
+        Remplacement fusible — 20 €
+      </label>
 
-<!-- HISTORIQUE -->
-<div id="hist" class="section">
-<h3>Historique clients</h3>
-<input id="search" placeholder="Rechercher" oninput="searchClient()">
-<ul id="list"></ul>
-</div>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Connectique / cosses" data-price="15">
+        Connectique / cosses — 15 €
+      </label>
 
-<script>
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Valve Schrader" data-price="40">
+        Valve Schrader — 40 €
+      </label>
 
-// NAV
-function show(id){
- document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
- document.getElementById(id).classList.add('active');
-}
+      <label class="check-row">
+        <input type="checkbox" class="service-checkbox" data-label="Brasure simple" data-price="80">
+        Brasure simple — 80 €
+      </label>
 
-// SIGNATURE
-function init(id){
- let c=document.getElementById(id);
- let ctx=c.getContext("2d");
- let d=false;
- c.onmousedown=()=>d=true;
- c.onmouseup=()=>d=false;
- c.onmousemove=e=>{
-  if(!d) return;
-  ctx.lineTo(e.offsetX,e.offsetY);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(e.offsetX,e.offsetY);
- };
-}
-init("sigClient"); init("sigTech");
+      <div class="service-line">
+        <label>Désignation fluide (libre)</label>
+        <input id="fluid_label" placeholder="Ex : Fluide R32">
+        <label>Montant fluide (€)</label>
+        <input id="fluid_amount" type="number" step="0.01" placeholder="Ex : 48">
+      </div>
 
-// DIAGNOSTIC
-function diagnostic(){
- let r="";
- let bp=parseFloat(bp.value), hp=parseFloat(hp.value), amp=parseFloat(amp.value), ampNom=parseFloat(ampNom.value);
+      <div class="hr"></div>
 
- if(bp<3 && hp<10) r+="Manque fluide\n";
- if(bp<3 && hp>=12) r+="Détendeur / évapo\n";
- if(amp<2) r+="Pas alimentation\n";
+      <h3>Photo intervention</h3>
+      <input id="doc_photo" type="file" accept="image/*" capture="environment" onchange="loadInterventionPhoto(event)">
+      <img id="doc_photo_preview" class="preview" style="display:none;" alt="Photo intervention">
 
- if(!isNaN(ampNom)){
-  if(amp<ampNom*0.6) r+="Intensité trop faible\n";
- }
+      <div class="hr"></div>
 
- diagRes.innerText=r;
-}
+      <h3>Signatures</h3>
+      <div class="grid-2">
+        <div class="signature-wrap">
+          <label>Signature client</label>
+          <canvas id="sig_client" width="500" height="200"></canvas>
+          <button class="btn btn-red" onclick="clearSignature('sig_client')">Effacer signature client</button>
+        </div>
+        <div class="signature-wrap">
+          <label>Signature technicien</label>
+          <canvas id="sig_tech" width="500" height="200"></canvas>
+          <button class="btn btn-red" onclick="clearSignature('sig_tech')">Effacer signature technicien</button>
+        </div>
+      </div>
 
-// DEPANNAGE
-function depannage(){
- let p=panne.value, r="";
- if(p==="ventil") r="Condensateur / moteur / carte";
- if(p==="comp") r="Relais / carte / compresseur";
- if(p==="alim") r="Disjoncteur / fusible";
- if(p==="intensite") r="Faible=manque charge / Forte=contrainte";
- depRes.innerText=r;
-}
+      <div class="hr"></div>
 
-// CALCUL
-function calc(){
- let t=0;
- document.querySelectorAll("[data-price]").forEach(e=>{
-  if(e.checked) t+=parseFloat(e.dataset.price);
- });
+      <button class="btn btn-orange" onclick="calculateDocumentTotal()">Calculer le total</button>
 
- if(multiCheck.checked){
-  let ui=parseInt(nbUI.value);
-  if(ui>=2) t+=160+(ui-2)*50;
- }
+      <div class="result-block">
+        <div class="badge badge-orange">Total : <span id="doc_total">0.00 €</span></div>
+        <pre id="doc_services_preview">Les prestations sélectionnées apparaîtront ici.</pre>
+      </div>
 
- let f=parseFloat(fluide.value);
- if(!isNaN(f)) t+=f;
+      <label>Document généré</label>
+      <textarea id="doc_output" placeholder="Le document complet apparaîtra ici..."></textarea>
 
- total.innerText=t+" €";
-}
+      <div class="inline-actions">
+        <button class="btn btn-blue" onclick="generateUnifiedDocument()">📄 Générer le document</button>
+        <button class="btn btn-green" onclick="saveCurrentIntervention()">💾 Enregistrer dans l’historique</button>
+        <button class="btn btn-orange" onclick="printUnifiedDocument()">🖨️ PDF / Impression</button>
+        <button class="btn btn-orange" onclick="sendUnifiedWhatsApp()">📲 WhatsApp</button>
+        <button class="btn btn-blue" onclick="sendUnifiedMail()">📧 Email</button>
+      </div>
+    </div>
+  </section>
 
-// HISTORIQUE
-let clients=JSON.parse(localStorage.getItem("clients")||"[]");
+  <!-- HISTORIQUE -->
+  <section id="tab-history" class="section">
+    <div class="card">
+      <h2>Historique client</h2>
+      <label>Recherche</label>
+      <input id="history_search" placeholder="Nom client, adresse, date..." oninput="renderHistory()">
+      <div id="history_list"></div>
+    </div>
+  </section>
 
-function save(){
- let entry={client:client.value,total:total.innerText,date:new Date().toLocaleString()};
- clients.push(entry);
- localStorage.setItem("clients",JSON.stringify(clients));
- display();
-}
+  <script>
+    // =========================
+    // NAVIGATION
+    // =========================
+    function showTab(tabId, btn) {
+      document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active-tab'));
+      document.getElementById(tabId).classList.add('active');
+      if (btn) btn.classList.add('active-tab');
+    }
 
-function display(){
- list.innerHTML="";
- clients.forEach(c=>{
-  let li=document.createElement("li");
-  li.innerText=c.client+" - "+c.total;
-  list.appendChild(li);
- });
-}
+    // =========================
+    // STORAGE
+    // =========================
+    const STORAGE_KEY = "air_sud_eco_confort_history_v2";
+    let historyItems = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    let currentPhotoData = "";
+    let lastDiagnosticData = null;
 
-function searchClient(){
- let val=search.value.toLowerCase();
- list.innerHTML="";
- clients.filter(c=>c.client.toLowerCase().includes(val)).forEach(c=>{
-  let li=document.createElement("li");
-  li.innerText=c.client+" - "+c.total;
-  list.appendChild(li);
- });
-}
+    function persistHistory() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historyItems));
+    }
 
-// EXPORT
-function pdf(){
- let w=window.open();
- w.document.write(document.getElementById("doc").innerHTML);
- w.print();
-}
+    // =========================
+    // SIGNATURES
+    // =========================
+    function initSignatureCanvas(id) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext("2d");
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "black";
 
-function wa(){
- window.open("https://wa.me/?text="+encodeURIComponent("Intervention "+client.value+" "+total.innerText));
-}
+      let drawing = false;
 
-function mail(){
- window.location.href="mailto:?subject=Intervention&body="+encodeURIComponent(client.value+" "+total.innerText);
-}
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches[0]) {
+          return {
+            x: (e.touches[0].clientX - rect.left) * (canvas.width / rect.width),
+            y: (e.touches[0].clientY - rect.top) * (canvas.height / rect.height)
+          };
+        }
+        return {
+          x: (e.clientX - rect.left) * (canvas.width / rect.width),
+          y: (e.clientY - rect.top) * (canvas.height / rect.height)
+        };
+      }
 
-display();
+      function start(e) {
+        drawing = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      }
 
-</script>
+      function move(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
 
+      function stop() {
+        drawing = false;
+        ctx.beginPath();
+      }
+
+      canvas.addEventListener("mousedown", start);
+      canvas.addEventListener("mousemove", move);
+      canvas.addEventListener("mouseup", stop);
+      canvas.addEventListener("mouseleave", stop);
+
+      canvas.addEventListener("touchstart", start, { passive: false });
+      canvas.addEventListener("touchmove", move, { passive: false });
+      canvas.addEventListener("touchend", stop);
+    }
+
+    function clearSignature(id) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    initSignatureCanvas("sig_client");
+    initSignatureCanvas("sig_tech");
+
+    // =========================
+    // PHOTO
+    // =========================
+    function loadInterventionPhoto(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function() {
+        currentPhotoData = reader.result;
+        const img = document.getElementById("doc_photo_preview");
+        img.src = currentPhotoData;
+        img.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // =========================
+    // DIAGNOSTIC EXPERT
+    // =========================
+    function runExpertDiagnostic() {
+      const bp = parseFloat(document.getElementById("diag_bp").value);
+      const hp = parseFloat(document.getElementById("diag_hp").value);
+      const amp = parseFloat(document.getElementById("diag_amp").value);
+      const ampNom = parseFloat(document.getElementById("diag_amp_nom").value);
+      const amb = parseFloat(document.getElementById("diag_amb").value);
+      const souf = parseFloat(document.getElementById("diag_souf").value);
+      const symptom = document.getElementById("diag_symptom").value;
+      const powerState = document.getElementById("diag_power_state").value;
+
+      const vis = {
+        condenseurSale: document.getElementById("vis_condenseur_sale").checked,
+        evaporateurSale: document.getElementById("vis_evaporateur_sale").checked,
+        ventilUE: document.getElementById("vis_ventil_ue_hs").checked,
+        ventilUI: document.getElementById("vis_ventil_ui_hs").checked,
+        givre: document.getElementById("vis_givre").checked,
+        bruit: document.getElementById("vis_bruit").checked,
+        huile: document.getElementById("vis_huile").checked,
+        corrosion: document.getElementById("vis_corrosion").checked,
+        buzz: document.getElementById("vis_bzzz").checked
+      };
+
+      if (isNaN(bp) || isNaN(hp) || isNaN(amp) || isNaN(amb) || isNaN(souf)) {
+        document.getElementById("diag_result").innerText =
+          "⚠️ Renseigne au minimum : BP, HP, intensité, température ambiante et soufflage.";
+        return;
+      }
+
+      const delta = amb - souf;
+
+      const diagMap = {
+        manque_fluide: {
+          label: "Manque de fluide / fuite",
+          score: 0,
+          reasons: [],
+          checks: ["Contrôle azote", "Recherche de fuite", "Vérifier traces d’huile", "Ne pas recharger sans contrôle"]
+        },
+        restriction: {
+          label: "Restriction / détendeur / évaporateur",
+          score: 0,
+          reasons: [],
+          checks: ["Contrôler filtre UI", "Contrôler turbine", "Contrôler détendeur / organe de détente", "Vérifier présence de givre"]
+        },
+        condensation: {
+          label: "Problème condensation / échange UE",
+          score: 0,
+          reasons: [],
+          checks: ["Contrôler ventilateur UE", "Nettoyer condenseur", "Vérifier circulation d’air", "Contrôler environnement chaud / confiné"]
+        },
+        compresseur: {
+          label: "Compresseur fatigué / compression faible",
+          score: 0,
+          reasons: [],
+          checks: ["Comparer intensité à la nominale", "Écouter bruit compresseur", "Contrôler stabilité HP/BP", "Vérifier compression réelle"]
+        },
+        alim: {
+          label: "Défaut électrique alimentation",
+          score: 0,
+          reasons: [],
+          checks: ["Vérifier arrivée tension", "Contrôler disjoncteur", "Contrôler fusible", "Contrôler bornier / câble / contacteur"]
+        },
+        ventil_ue: {
+          label: "Défaut ventilateur UE",
+          score: 0,
+          reasons: [],
+          checks: ["Contrôler condensateur ventilateur", "Contrôler alimentation moteur", "Contrôler moteur ventilateur", "Contrôler carte"]
+        },
+        ventil_ui: {
+          label: "Défaut ventilateur UI",
+          score: 0,
+          reasons: [],
+          checks: ["Contrôler moteur UI", "Contrôler turbine", "Contrôler carte UI", "Contrôler débit d’air"]
+        },
+        condensateur: {
+          label: "Condensateur HS",
+          score: 0,
+          reasons: [],
+          checks: ["Mesurer condensateur", "Contrôler démarrage", "Vérifier bourdonnement", "Contrôler moteur / compresseur associé"]
+        },
+        carte: {
+          label: "Carte électronique / commande",
+          score: 0,
+          reasons: [],
+          checks: ["Contrôler tension carte", "Contrôler sorties commande", "Contrôler sécurités", "Contrôler défaut logique"]
+        },
+        encrassement: {
+          label: "Machine encrassée / échange dégradé",
+          score: 0,
+          reasons: [],
+          checks: ["Nettoyer UE/UI", "Contrôler filtres", "Contrôler échangeurs", "Reprendre mesures après nettoyage"]
+        }
+      };
+
+      function addScore(key, pts, reason) {
+        diagMap[key].score += pts;
+        diagMap[key].reasons.push(reason);
+      }
+
+      // ===== BP / HP =====
+      if (bp < 3) {
+        addScore("manque_fluide", 2, "BP basse");
+        addScore("restriction", 2, "BP basse");
+        addScore("compresseur", 1, "BP basse compatible");
+      }
+
+      if (hp < 10) {
+        addScore("manque_fluide", 2, "HP basse");
+        addScore("compresseur", 2, "HP basse");
+      }
+
+      if (hp >= 10 && hp <= 16) {
+        addScore("restriction", 2, "HP normale / cohérente avec restriction");
+      }
+
+      if (hp > 20) {
+        addScore("condensation", 3, "HP élevée");
+        addScore("ventil_ue", 2, "HP élevée compatible ventilateur UE");
+      }
+
+      if (bp > 6 && hp < 12) {
+        addScore("compresseur", 3, "BP haute + HP basse");
+      }
+
+      // ===== Intensité =====
+      if (amp < 2) {
+        addScore("alim", 4, "Intensité très faible / quasi nulle");
+      } else if (amp < 3) {
+        addScore("manque_fluide", 1, "Intensité faible");
+        addScore("restriction", 1, "Intensité faible");
+        addScore("compresseur", 2, "Intensité faible");
+      }
+
+      if (amp > 8) {
+        addScore("condensation", 2, "Intensité élevée");
+        addScore("compresseur", 2, "Compresseur en contrainte");
+      }
+
+      if (!isNaN(ampNom) && ampNom > 0) {
+        if (amp < ampNom * 0.6) {
+          addScore("compresseur", 3, "Intensité très inférieure à la nominale");
+          addScore("manque_fluide", 1, "Compresseur peu chargé");
+        }
+        if (amp > ampNom * 1.3) {
+          addScore("condensation", 3, "Intensité supérieure à la nominale");
+        }
+      }
+
+      // ===== Thermique =====
+      if (delta < 5) {
+        addScore("manque_fluide", 2, "ΔT faible");
+        addScore("encrassement", 2, "ΔT faible");
+        addScore("compresseur", 1, "ΔT faible");
+      }
+
+      if (delta >= 8) {
+        addScore("restriction", 1, "ΔT encore correct");
+      }
+
+      // ===== Visuel =====
+      if (vis.condenseurSale) addScore("condensation", 3, "Condenseur encrassé observé");
+      if (vis.evaporateurSale) addScore("encrassement", 3, "Évaporateur encrassé observé");
+      if (vis.ventilUE) {
+        addScore("ventil_ue", 4, "Ventilateur UE arrêté");
+        addScore("condensation", 2, "Ventilateur UE arrêté compatible condensation");
+      }
+      if (vis.ventilUI) addScore("ventil_ui", 4, "Ventilateur UI ne tourne pas / débit insuffisant");
+      if (vis.givre) {
+        addScore("restriction", 3, "Présence de givre");
+        addScore("manque_fluide", 1, "Givre compatible sous-alimentation");
+      }
+      if (vis.bruit) addScore("compresseur", 2, "Bruit anormal");
+      if (vis.huile) addScore("manque_fluide", 3, "Trace d’huile / suspicion fuite");
+      if (vis.corrosion) addScore("encrassement", 1, "Corrosion / environnement dégradé");
+      if (vis.buzz) addScore("condensateur", 4, "Bourdonnement / démarrage difficile");
+
+      // ===== Symptôme client =====
+      if (symptom === "plus_de_froid") {
+        addScore("manque_fluide", 1, "Symptôme : plus de froid");
+        addScore("restriction", 1, "Symptôme : plus de froid");
+        addScore("compresseur", 1, "Symptôme : plus de froid");
+      }
+
+      if (symptom === "souffle_sans_froid") {
+        addScore("manque_fluide", 1, "Symptôme : souffle sans froid");
+        addScore("ventil_ui", 1, "Symptôme : souffle sans froid");
+        addScore("encrassement", 1, "Symptôme : souffle sans froid");
+      }
+
+      if (symptom === "pas_demarrage") {
+        addScore("alim", 2, "Symptôme : pas de démarrage");
+        addScore("carte", 2, "Symptôme : pas de démarrage");
+      }
+
+      if (symptom === "disjoncte") {
+        addScore("alim", 2, "Symptôme : disjonction");
+        addScore("compresseur", 1, "Disjonction possible contrainte compresseur");
+      }
+
+      if (symptom === "marche_aleatoire") {
+        addScore("carte", 2, "Symptôme : fonctionnement aléatoire");
+        addScore("condensateur", 1, "Fonctionnement instable possible");
+      }
+
+      if (symptom === "ventil_seul") {
+        addScore("compresseur", 1, "Ventilation seule");
+        addScore("carte", 2, "Commande compresseur absente");
+      }
+
+      // ===== Power state =====
+      if (powerState === "no_power") {
+        addScore("alim", 5, "Pas de tension arrivée");
+      }
+      if (powerState === "power_ok_no_reaction") {
+        addScore("carte", 4, "Tension OK mais aucune réaction");
+        addScore("alim", 1, "Défaut interne possible");
+      }
+      if (powerState === "power_ok_machine_runs") {
+        addScore("restriction", 1, "Machine alimente mais fonctionnement anormal");
+      }
+
+      // ===== Extra logic =====
+      if (vis.ventilUE && hp > 20) {
+        addScore("ventil_ue", 2, "Ventilateur UE arrêté + HP élevée");
+      }
+
+      if (vis.ventilUI && delta < 5) {
+        addScore("ventil_ui", 2, "Débit UI mauvais + ΔT faible");
+      }
+
+      // ===== Sort + % =====
+      const entries = Object.entries(diagMap)
+        .filter(([, v]) => v.score > 0)
+        .sort((a, b) => b[1].score - a[1].score);
+
+      if (!entries.length) {
+        document.getElementById("diag_result").innerText =
+          "Aucune conclusion robuste. Vérifie les mesures et complète les observations.";
+        return;
+      }
+
+      const totalScore = entries.reduce((sum, [, v]) => sum + v.score, 0);
+      const withPercent = entries.map(([key, v]) => ({
+        key,
+        label: v.label,
+        score: v.score,
+        percent: Math.round((v.score / totalScore) * 100),
+        reasons: v.reasons,
+        checks: v.checks
+      }));
+
+      // normalize top 3 for readability
+      const top3 = withPercent.slice(0, 3);
+
+      let output = "";
+      const principal = top3[0];
+
+      output += "DIAGNOSTIC PRINCIPAL\n";
+      output += `${principal.label} — ${principal.percent}%\n\n`;
+      output += "Pourquoi :\n";
+      principal.reasons.forEach(r => output += `- ${r}\n`);
+      output += "\nVérifications recommandées :\n";
+      principal.checks.forEach(c => output += `- ${c}\n`);
+
+      if (top3[1]) {
+        output += "\nCAUSES SECONDAIRES\n";
+        top3.slice(1).forEach(item => {
+          output += `\n${item.label} — ${item.percent}%\n`;
+          output += "Pourquoi :\n";
+          item.reasons.slice(0, 4).forEach(r => output += `- ${r}\n`);
+          output += "Vérifications :\n";
+          item.checks.slice(0, 4).forEach(c => output += `- ${c}\n`);
+        });
+      }
+
+      output += "\nCONCLUSION CLIENT\n";
+      output += generateClientConclusion(principal.label, top3);
+
+      document.getElementById("diag_result").innerText = output;
+
+      const badges = [];
+      badges.push(`<span class="badge badge-orange">BP ${bp} bar</span>`);
+      badges.push(`<span class="badge badge-blue">HP ${hp} bar</span>`);
+      badges.push(`<span class="badge badge-green">Intensité ${amp} A</span>`);
+      badges.push(`<span class="badge badge-blue">ΔT ${(delta).toFixed(1)}°C</span>`);
+      document.getElementById("diag_summary_badges").innerHTML = badges.join("");
+
+      lastDiagnosticData = {
+        measures: { bp, hp, amp, ampNom, amb, souf, delta },
+        symptom,
+        powerState,
+        visual: vis,
+        results: top3,
+        text: output
+      };
+    }
+
+    function generateClientConclusion(mainLabel, top3) {
+      if (mainLabel.includes("Manque de fluide")) {
+        return "Le système présente un fonctionnement compatible avec une sous-charge frigorifique. Une recherche de fuite et un contrôle d’étanchéité sont recommandés avant toute recharge.";
+      }
+      if (mainLabel.includes("Restriction")) {
+        return "Le système présente un déséquilibre côté évaporation. L’hypothèse principale est une restriction, un problème de détente ou un défaut de circulation d’air côté intérieur.";
+      }
+      if (mainLabel.includes("condensation")) {
+        return "Le système présente un défaut d’échange thermique côté unité extérieure. Un contrôle du ventilateur et de l’état du condenseur est recommandé.";
+      }
+      if (mainLabel.includes("Compresseur")) {
+        return "Les mesures indiquent une compression insuffisante ou une fatigue du compresseur. L’état du compresseur semble dégradé avant intervention complète.";
+      }
+      if (mainLabel.includes("alimentation")) {
+        return "Le défaut principal semble électrique. L’alimentation ou le circuit de puissance / commande doit être contrôlé avant toute autre intervention.";
+      }
+      if (mainLabel.includes("Carte")) {
+        return "L’alimentation semble présente mais la machine ne réagit pas correctement. Une défaillance de carte électronique ou de commande est probable.";
+      }
+      return "Le système présente une anomalie nécessitant des vérifications complémentaires ciblées.";
+    }
+
+    // =========================
+    // DEPANNAGE GUIDÉ
+    // =========================
+    function runRepairGuide() {
+      const issue = document.getElementById("repair_issue").value;
+      let txt = "";
+
+      if (!issue) {
+        txt = "Choisis une panne pour afficher le guidage étape par étape.";
+      }
+
+      if (issue === "no_power") {
+        txt =
+`PAS D’ALIMENTATION
+
+Étape 1
+- Vérifier présence tension arrivée machine
+
+Si pas de tension :
+- disjoncteur
+- câble
+- bornier
+- contacteur
+- serrage
+
+Si tension OK mais aucune réaction :
+- carte électronique
+- sécurité interne
+- alimentation carte
+- connecteur / câblage interne
+
+Conclusion :
+- si arrivée absente → défaut externe
+- si arrivée présente → défaut interne machine`;
+      }
+
+      if (issue === "compressor_no_start") {
+        txt =
+`COMPRESSEUR NE DÉMARRE PAS
+
+Étape 1
+- Vérifier si la machine reçoit bien l’ordre de démarrage
+
+Étape 2
+- Contrôler tension compresseur
+- Contrôler relais / carte
+- Contrôler condensateur si machine monophasée
+
+Étape 3
+- Si bourdonnement : condensateur ou compresseur bloqué
+- Si rien du tout : carte / commande / sécurité
+
+Conclusion :
+- ordre absent → commande / carte
+- ordre présent sans démarrage → compresseur / condensateur`;
+      }
+
+      if (issue === "fan_ue_no_start") {
+        txt =
+`VENTILATEUR UE NE TOURNE PAS
+
+Étape 1
+- Vérifier tension au moteur
+
+Si tension absente :
+- carte / commande / relais
+
+Si tension présente :
+- condensateur ventilateur
+- moteur ventilateur
+- câblage
+
+Conséquences possibles :
+- HP qui monte
+- intensité élevée
+- rendement qui chute`;
+      }
+
+      if (issue === "fan_ui_no_start") {
+        txt =
+`VENTILATEUR UI NE TOURNE PAS
+
+Étape 1
+- Vérifier débit réel d’air
+- Contrôler turbine, moteur, carte UI
+
+Conséquences :
+- mauvais ΔT
+- givrage possible
+- sensation de souffle anormal
+
+Vérifier :
+- filtre
+- évaporateur sale
+- moteur UI
+- carte`;
+      }
+
+      if (issue === "hard_start_buzz") {
+        txt =
+`DÉMARRAGE DIFFICILE / BZZZ
+
+Hypothèse principale :
+- condensateur HS
+
+À vérifier :
+- valeur du condensateur
+- tension présente
+- moteur / compresseur bloqué
+
+Conclusion :
+- si condensateur hors valeur → remplacement
+- si condensateur OK → moteur ou compresseur à contrôler`;
+      }
+
+      if (issue === "abnormal_current") {
+        txt =
+`INTENSITÉ ANORMALE
+
+Intensité faible :
+- manque de charge
+- compresseur peu chargé
+- restriction possible
+- alimentation insuffisante
+
+Intensité forte :
+- compresseur en contrainte
+- condensation mauvaise
+- ventilateur UE absent
+- encrassement
+- compresseur fatigué
+
+Toujours comparer à l’intensité nominale si disponible.`;
+      }
+
+      if (issue === "board_suspect") {
+        txt =
+`CARTE ÉLECTRONIQUE SUSPECTE
+
+Étape 1
+- Vérifier alimentation carte
+
+Étape 2
+- Vérifier si la carte commande les organes
+
+Étape 3
+- Contrôler sécurités qui peuvent bloquer la commande
+
+Indices typiques :
+- tension arrivée OK
+- rien ne démarre ou comportement incohérent
+- défaut aléatoire
+
+Conclusion :
+- si alimentation carte OK et pas de commande → carte probable`;
+      }
+
+      document.getElementById("repair_result").innerText = txt;
+    }
+
+    // =========================
+    // DOCUMENT / SERVICES
+    // =========================
+    function calculateDocumentTotal() {
+      let total = 0;
+      let lines = [];
+
+      document.querySelectorAll(".service-checkbox").forEach(el => {
+        if (el.checked) {
+          const label = el.dataset.label;
+          const price = parseFloat(el.dataset.price || "0");
+          total += price;
+          lines.push(`${label} : ${price.toFixed(2)} €`);
+        }
+      });
+
+      const multiChecked = document.getElementById("svc_multisplit_check").checked;
+      const ui = parseInt(document.getElementById("svc_multisplit_ui").value);
+
+      if (multiChecked) {
+        if (!isNaN(ui) && ui >= 2) {
+          const multiPrice = 160 + Math.max(0, ui - 2) * 50;
+          total += multiPrice;
+          lines.push(`Entretien multisplit (${ui} UI) : ${multiPrice.toFixed(2)} €`);
+        } else {
+          lines.push("Entretien multisplit : nombre UI invalide");
+        }
+      }
+
+      const fluidLabel = document.getElementById("fluid_label").value.trim();
+      const fluidAmount = parseFloat(document.getElementById("fluid_amount").value);
+      if (!isNaN(fluidAmount) && fluidAmount > 0) {
+        total += fluidAmount;
+        lines.push(`${fluidLabel || "Fluide"} : ${fluidAmount.toFixed(2)} €`);
+      }
+
+      document.getElementById("doc_total").innerText = `${total.toFixed(2)} €`;
+      document.getElementById("doc_services_preview").innerText =
+        lines.length ? lines.join("\n") : "Aucune prestation sélectionnée.";
+
+      return { total, lines };
+    }
+
+    function generateUnifiedDocument() {
+      const { total, lines } = calculateDocumentTotal();
+      const client = document.getElementById("doc_client").value.trim();
+      const email = document.getElementById("doc_email").value.trim();
+      const address = document.getElementById("doc_address").value.trim();
+      const dateVal = document.getElementById("doc_date").value;
+      const dateText = dateVal ? new Date(dateVal).toLocaleString() : new Date().toLocaleString();
+
+      const diagText = lastDiagnosticData ? lastDiagnosticData.text : "Aucun diagnostic expert généré.";
+      const photoInfo = currentPhotoData ? "Photo intervention jointe dans l’application." : "Aucune photo jointe.";
+
+      let txt = "";
+      txt += "===== AIR SUD ÉCO-CONFORT =====\n";
+      txt += "Entretien & maintenance des climatisations\n";
+      txt += "34350 Valras-Plage\n";
+      txt += "airsudecoconfort.fr / 07 71 13 65 48\n\n";
+
+      txt += "===== DOCUMENT UNIQUE : DEVIS / ACCEPTATION / INTERVENTION =====\n\n";
+
+      txt += `Date : ${dateText}\n`;
+      txt += `Client : ${client || "Non renseigné"}\n`;
+      txt += `Email : ${email || "Non renseigné"}\n`;
+      txt += `Adresse : ${address || "Non renseignée"}\n\n`;
+
+      txt += "----- PRESTATIONS SÉLECTIONNÉES -----\n";
+      if (lines.length) {
+        lines.forEach(line => txt += `- ${line}\n`);
+      } else {
+        txt += "- Aucune prestation sélectionnée\n";
+      }
+
+      txt += `\nTOTAL INTERVENTION : ${total.toFixed(2)} €\n\n`;
+
+      txt += "----- DIAGNOSTIC EXPERT -----\n";
+      txt += diagText + "\n\n";
+
+      txt += "----- OBSERVATION PHOTO -----\n";
+      txt += photoInfo + "\n\n";
+
+      txt += "----- ACCEPTATION CLIENT -----\n";
+      txt += "Le client accepte expressément la réalisation immédiate des travaux sélectionnés ci-dessus et s’engage à régler la totalité de la prestation à la fin de l’intervention.\n\n";
+
+      txt += "Signature client : présente sur l’application\n";
+      txt += "Signature technicien : présente sur l’application\n";
+
+      document.getElementById("doc_output").value = txt;
+    }
+
+    // =========================
+    // HISTORY
+    // =========================
+    function saveCurrentIntervention() {
+      generateUnifiedDocument();
+
+      const item = {
+        id: Date.now(),
+        date: document.getElementById("doc_date").value || new Date().toISOString(),
+        client: document.getElementById("doc_client").value.trim(),
+        email: document.getElementById("doc_email").value.trim(),
+        address: document.getElementById("doc_address").value.trim(),
+        total: document.getElementById("doc_total").innerText,
+        documentText: document.getElementById("doc_output").value,
+        diagnosticText: lastDiagnosticData ? lastDiagnosticData.text : "",
+        photo: currentPhotoData || "",
+        sigClient: document.getElementById("sig_client").toDataURL(),
+        sigTech: document.getElementById("sig_tech").toDataURL()
+      };
+
+      historyItems.unshift(item);
+      persistHistory();
+      renderHistory();
+      alert("Intervention enregistrée dans l’historique.");
+    }
+
+    function renderHistory() {
+      const q = document.getElementById("history_search").value.trim().toLowerCase();
+      const container = document.getElementById("history_list");
+      container.innerHTML = "";
+
+      const filtered = historyItems.filter(item => {
+        return (
+          (item.client || "").toLowerCase().includes(q) ||
+          (item.address || "").toLowerCase().includes(q) ||
+          (item.total || "").toLowerCase().includes(q) ||
+          (item.date || "").toLowerCase().includes(q)
+        );
+      });
+
+      if (!filtered.length) {
+        container.innerHTML = '<div class="history-item">Aucun résultat.</div>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "history-item";
+        div.innerHTML = `
+          <h4>${escapeHtml(item.client || "Client non renseigné")}</h4>
+          <div class="small">${escapeHtml(item.address || "")}</div>
+          <div class="small">${escapeHtml(item.total || "")} • ${escapeHtml(new Date(item.date).toLocaleString())}</div>
+          <div class="inline-actions">
+            <button class="btn btn-blue" onclick="loadHistoryItem(${item.id})">Ouvrir</button>
+            <button class="btn btn-red" onclick="deleteHistoryItem(${item.id})">Supprimer</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function loadHistoryItem(id) {
+      const item = historyItems.find(x => x.id === id);
+      if (!item) return;
+
+      document.getElementById("doc_client").value = item.client || "";
+      document.getElementById("doc_email").value = item.email || "";
+      document.getElementById("doc_address").value = item.address || "";
+      document.getElementById("doc_output").value = item.documentText || "";
+      document.getElementById("doc_total").innerText = item.total || "0.00 €";
+
+      if (item.photo) {
+        currentPhotoData = item.photo;
+        const img = document.getElementById("doc_photo_preview");
+        img.src = currentPhotoData;
+        img.style.display = "block";
+      }
+
+      // reload signature previews into canvases
+      restoreCanvasFromDataUrl("sig_client", item.sigClient);
+      restoreCanvasFromDataUrl("sig_tech", item.sigTech);
+
+      showTab('tab-document', document.querySelectorAll('.nav button')[2]);
+    }
+
+    function deleteHistoryItem(id) {
+      if (!confirm("Supprimer cette intervention de l’historique ?")) return;
+      historyItems = historyItems.filter(x => x.id !== id);
+      persistHistory();
+      renderHistory();
+    }
+
+    function restoreCanvasFromDataUrl(canvasId, dataUrl) {
+      if (!dataUrl) return;
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+      img.onload = function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = dataUrl;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    // =========================
+    // EXPORTS
+    // =========================
+    function printUnifiedDocument() {
+      generateUnifiedDocument();
+
+      const txt = document.getElementById("doc_output").value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+
+      const w = window.open("", "", "width=900,height=800");
+      w.document.write(`
+        <html>
+        <head>
+          <title>Document intervention</title>
+          <style>
+            body { font-family: Arial; padding: 20px; }
+            pre { white-space: pre-wrap; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <pre>${txt}</pre>
+        </body>
+        </html>
+      `);
+      w.document.close();
+      w.print();
+    }
+
+    function sendUnifiedWhatsApp() {
+      generateUnifiedDocument();
+      const txt = document.getElementById("doc_output").value;
+      window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank");
+    }
+
+    function sendUnifiedMail() {
+      generateUnifiedDocument();
+      const email = document.getElementById("doc_email").value.trim();
+      const subject = "Document intervention Air Sud Éco-Confort";
+      const body = document.getElementById("doc_output").value;
+      window.location.href =
+        `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    // =========================
+    // INIT
+    // =========================
+    document.getElementById("doc_date").value = new Date().toISOString().slice(0, 16);
+    renderHistory();
+  </script>
 </body>
 </html>
