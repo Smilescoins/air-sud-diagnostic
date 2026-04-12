@@ -1,254 +1,129 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Air Sud Éco-Confort V4</title>
-
+<title>Air Sud Éco-Confort</title>
 <style>
-body {
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
-
-.topbar {
-  padding:15px;
-  text-align:center;
-  background:linear-gradient(90deg,#3b82f6,#f97316);
-}
-
-.nav {
-  display:flex;
-  gap:5px;
-  padding:10px;
-  background:#111827;
-}
-
-.nav button {
-  flex:1;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:#1e293b;
-  color:white;
-  font-weight:bold;
-}
-
-.section {
-  display:none;
-  padding:15px;
-}
-
-.active {
-  display:block;
-}
-
-.card {
-  background:#1e293b;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:10px;
-}
-
-button {
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:#f97316;
-  color:white;
-  margin:5px;
-}
+body{font-family:Arial;background:#0f172a;color:white;padding:20px}
+button{padding:10px;margin:5px;border:none;border-radius:8px;background:orange;color:white}
+.card{background:#1e293b;padding:15px;border-radius:10px;margin-bottom:10px}
 </style>
-
 </head>
 
 <body>
 
-<div class="topbar">
-  <h2>Air Sud Éco-Confort</h2>
-</div>
+<h1>Air Sud Éco-Confort</h1>
 
-<div class="nav">
-  <button onclick="showTab('home')">Accueil</button>
-  <button onclick="showTab('diag')">Diagnostic</button>
-  <button onclick="showTab('guided')">Mode USA</button>
-  <button onclick="showTab('doc')">Intervention</button>
-  <button onclick="showTab('history')">Historique</button>
-</div>
-
-<!-- ACCUEIL -->
-<div id="home" class="section active">
-  <div class="card">
-    <h3>Accueil</h3>
-    <button onclick="showTab('diag')">🔧 Diagnostic expert</button>
-    <button onclick="showTab('guided')">🇺🇸 Mode guidé</button>
-    <button onclick="showTab('doc')">📋 Intervention</button>
-    <button onclick="showTab('history')">📂 Historique</button>
-  </div>
-</div>
+<!-- MENU -->
+<button onclick="show('diag')">Diagnostic</button>
+<button onclick="show('usa')">Mode USA</button>
+<button onclick="show('doc')">Intervention</button>
+<button onclick="show('hist')">Historique</button>
 
 <!-- DIAGNOSTIC -->
-<div id="diag" class="section">
-  <div class="card">
-    <h3>Diagnostic expert</h3>
-    <input id="bp" placeholder="BP">
-    <input id="hp" placeholder="HP">
-    <input id="amp" placeholder="Intensité">
-    <input id="amb" placeholder="T° ambiante">
-    <input id="souf" placeholder="T° soufflage">
-    <button onclick="diagnostic()">Analyser</button>
-    <pre id="result"></pre>
-  </div>
+<div id="diag" class="card">
+<h2>Diagnostic</h2>
+<input id="bp" placeholder="BP">
+<input id="hp" placeholder="HP">
+<input id="amp" placeholder="Intensité">
+<input id="amb" placeholder="Temp ambiante">
+<input id="souf" placeholder="Temp soufflage">
+<button onclick="diagnostic()">Analyser</button>
+<pre id="res"></pre>
 </div>
 
 <!-- MODE USA -->
-<div id="guided" class="section">
-  <div class="card">
-    <h3>Mode guidé USA</h3>
-    <button onclick="startGuided('start_fail')">Pas de démarrage</button>
-    <button onclick="startGuided('no_cold')">Pas de froid</button>
-    <button onclick="startGuided('trip')">Disjoncte</button>
-    <button onclick="startGuided('random')">Aléatoire</button>
-    <div id="guidedBox"></div>
-  </div>
+<div id="usa" class="card" style="display:none">
+<h2>Mode USA</h2>
+<button onclick="usa()">Pas de démarrage</button>
+<pre id="usaRes"></pre>
 </div>
 
-<!-- DOCUMENT -->
-<div id="doc" class="section">
-  <div class="card">
-    <h3>Intervention</h3>
-    <input id="client" placeholder="Nom client">
-    <textarea id="docText" placeholder="Document"></textarea>
-    <button onclick="generateDoc()">Générer</button>
-  </div>
+<!-- INTERVENTION -->
+<div id="doc" class="card" style="display:none">
+<h2>Intervention</h2>
+
+<input id="client" placeholder="Nom client">
+
+<br><br>
+
+<label><input type="checkbox" value="110"> Entretien monosplit 110€</label><br>
+<label><input type="checkbox" value="160"> Multisplit 160€</label><br>
+<label><input type="checkbox" value="90"> Recherche fuite 90€</label><br>
+<label><input type="checkbox" value="60"> Recharge MO 60€</label><br>
+
+<br>
+
+<button onclick="total()">Calcul total</button>
+<pre id="total"></pre>
+
+<button onclick="save()">Enregistrer</button>
 </div>
 
 <!-- HISTORIQUE -->
-<div id="history" class="section">
-  <div class="card">
-    <h3>Historique</h3>
-    <div id="historyList"></div>
-  </div>
+<div id="hist" class="card" style="display:none">
+<h2>Historique</h2>
+<div id="list"></div>
 </div>
 
 <script>
 
-// NAVIGATION
-function showTab(id){
- document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
- document.getElementById(id).classList.add('active');
+function show(id){
+ document.getElementById("diag").style.display="none";
+ document.getElementById("usa").style.display="none";
+ document.getElementById("doc").style.display="none";
+ document.getElementById("hist").style.display="none";
+ document.getElementById(id).style.display="block";
 }
 
-// =======================
-// DIAGNOSTIC SIMPLE
-// =======================
+// DIAGNOSTIC
 function diagnostic(){
- let bp = parseFloat(document.getElementById('bp').value);
- let hp = parseFloat(document.getElementById('hp').value);
- let amp = parseFloat(document.getElementById('amp').value);
- let amb = parseFloat(document.getElementById('amb').value);
- let souf = parseFloat(document.getElementById('souf').value);
+ let bp=+document.getElementById("bp").value;
+ let hp=+document.getElementById("hp").value;
+ let amb=+document.getElementById("amb").value;
+ let souf=+document.getElementById("souf").value;
 
- if(isNaN(bp)||isNaN(hp)||isNaN(amp)||isNaN(amb)||isNaN(souf)){
-   document.getElementById("result").innerText="Remplis toutes les valeurs";
-   return;
- }
+ let dt=amb-souf;
 
- let delta = amb - souf;
- let diag="";
+ let r="";
+ if(bp<3 && hp<10) r="Manque de fluide";
+ else if(bp<3) r="Restriction possible";
+ else if(hp>20) r="Problème condensation";
+ else r="RAS";
 
- if(bp<3 && hp<10){
-   diag="Manque de fluide probable";
- }
- else if(bp<3 && hp>10){
-   diag="Restriction possible";
- }
- else if(hp>20){
-   diag="Problème condensation";
- }
- else{
-   diag="Analyse complémentaire nécessaire";
- }
-
- result.innerText = `ΔT = ${delta}\n${diag}`;
+ document.getElementById("res").innerText="ΔT="+dt+"\n"+r;
 }
 
-// =======================
-// MODE GUIDÉ USA
-// =======================
-let step=0;
-let scenario="";
-
-function startGuided(s){
- scenario=s;
- step=1;
- next();
+// USA
+function usa(){
+ document.getElementById("usaRes").innerText=
+ "Défaut électrique probable - vérifier disjoncteur, alimentation, fusible ou condensateur";
 }
 
-function answer(v){
- window["s"+step]=v;
- step++;
- next();
-}
-
-function next(){
-
- let out="";
-
- if(scenario==="start_fail"){
-   if(step===1){
-     out="Machine démarre ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-   }
-   else if(step===2){
-     out="Tension ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-   }
-   else{
-     out="💥 Défaut électrique ou condensateur";
-   }
- }
-
- if(scenario==="no_cold"){
-   if(step===1){
-     out="Compresseur tourne ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-   }
-   else{
-     out="💥 Fluide ou débit air";
-   }
- }
-
- if(scenario==="trip"){
-   out="💥 Disjonction → vérifier compresseur / condensateur";
- }
-
- if(scenario==="random"){
-   out="💥 Défaut aléatoire → carte ou sonde";
- }
-
- document.getElementById("guidedBox").innerHTML=out;
-}
-
-// =======================
-// DOCUMENT + HISTORIQUE
-// =======================
-let history=[];
-
-function generateDoc(){
- let client=document.getElementById('client').value;
- let text=`Intervention client : ${client}`;
- document.getElementById('docText').value=text;
-
- history.push(text);
- renderHistory();
-}
-
-function renderHistory(){
- let html="";
- history.forEach(h=>{
-   html+=`<div>${h}</div>`;
+// TOTAL
+function total(){
+ let sum=0;
+ document.querySelectorAll("#doc input[type=checkbox]").forEach(c=>{
+   if(c.checked) sum+=+c.value;
  });
- document.getElementById('historyList').innerHTML=html;
+ document.getElementById("total").innerText=sum+" €";
+}
+
+// HISTO
+let hist=[];
+
+function save(){
+ let name=document.getElementById("client").value;
+ let t=document.getElementById("total").innerText;
+
+ hist.push(name+" - "+t);
+ render();
+}
+
+function render(){
+ let html="";
+ hist.forEach(h=>html+="<div>"+h+"</div>");
+ document.getElementById("list").innerHTML=html;
 }
 
 </script>
