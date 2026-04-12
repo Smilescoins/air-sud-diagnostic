@@ -9,7 +9,7 @@
 body { font-family: Arial; background:#f5f5f5; padding:20px; }
 .card { background:white; padding:15px; margin-bottom:15px; border-radius:10px; }
 input, textarea { width:100%; padding:10px; margin:5px 0; }
-button { width:100%; padding:12px; background:orange; border:none; color:white; font-weight:bold; }
+button { width:100%; padding:12px; background:orange; border:none; color:white; font-weight:bold; margin-top:5px;}
 </style>
 </head>
 
@@ -41,6 +41,7 @@ button { width:100%; padding:12px; background:orange; border:none; color:white; 
 <textarea id="rapport" rows="10"></textarea>
 
 <button onclick="generate()">📄 Générer rapport complet</button>
+<button onclick="printRapport()">🖨️ Télécharger / Imprimer PDF</button>
 </div>
 
 <script>
@@ -142,6 +143,14 @@ function generate(){
  txt += "Signature client : __________\n";
 
  document.getElementById("rapport").value = txt;
+}
+
+function printRapport(){
+  let contenu = document.getElementById("rapport").value;
+  let fenetre = window.open("", "", "width=600,height=600");
+  fenetre.document.write("<pre>" + contenu + "</pre>");
+  fenetre.document.close();
+  fenetre.print();
 }
 
 </script>
