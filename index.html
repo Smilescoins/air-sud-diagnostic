@@ -6,17 +6,17 @@
 <title>Air Sud Éco-Confort</title>
 
 <style>
-body { font-family: Arial; margin:0; }
-.nav { display:flex; background:#0f172a; }
-.nav button {
-  flex:1; padding:12px; border:none; color:white; background:#1e293b;
-}
+body { font-family: Arial; margin:0; background:#0f172a; color:white; }
+.nav { display:flex; }
+.nav button { flex:1; padding:12px; border:none; background:#1e293b; color:white; }
 .section { display:none; padding:15px; }
 .active { display:block; }
 input, textarea, select { width:100%; padding:10px; margin:5px 0; }
 button { padding:10px; margin-top:5px; width:100%; }
-canvas { border:1px solid black; }
+canvas { background:white; }
+pre { white-space: pre-wrap; }
 </style>
+
 </head>
 
 <body>
@@ -24,40 +24,52 @@ canvas { border:1px solid black; }
 <div class="nav">
 <button onclick="show('diag')">🔧 Diagnostic</button>
 <button onclick="show('dep')">⚡ Dépannage</button>
-<button onclick="show('bon')">📋 Bon</button>
-<button onclick="show('devis')">💰 Devis</button>
+<button onclick="show('doc')">📋 Intervention</button>
+<button onclick="show('hist')">📂 Historique</button>
 </div>
 
 <!-- DIAGNOSTIC -->
 <div id="diag" class="section active">
-<h3>Diagnostic</h3>
+<h3>Diagnostic complet</h3>
+
 <input id="bp" placeholder="BP">
 <input id="hp" placeholder="HP">
 <input id="amp" placeholder="Intensité">
+<input id="ampNom" placeholder="Intensité normale">
+<input id="amb" placeholder="Temp ambiante">
+<input id="souf" placeholder="Soufflage">
+
 <button onclick="diagnostic()">Analyser</button>
-<pre id="res"></pre>
+
+<pre id="diagRes"></pre>
 </div>
 
 <!-- DEPANNAGE -->
 <div id="dep" class="section">
 <h3>Dépannage électrique</h3>
+
 <select id="panne">
 <option value="">Choisir panne</option>
 <option value="ventil">Ventilateur UE HS</option>
 <option value="comp">Compresseur ne démarre pas</option>
 <option value="alim">Pas d’alimentation</option>
+<option value="intensite">Intensité anormale</option>
 </select>
+
 <button onclick="depannage()">Afficher</button>
 <pre id="depRes"></pre>
 </div>
 
-<!-- BON -->
-<div id="bon" class="section">
-<h3>Bon d’intervention</h3>
+<!-- DOCUMENT UNIQUE -->
+<div id="doc" class="section">
+
+<h3>Document intervention / devis</h3>
+
 <input id="client" placeholder="Client">
 <input id="adresse" placeholder="Adresse">
 
 <label><input type="checkbox" data-price="110"> Entretien mono</label>
+
 <label><input type="checkbox" id="multiCheck"> Multisplit</label>
 <input id="nbUI" placeholder="Nb UI">
 
@@ -66,81 +78,155 @@ canvas { border:1px solid black; }
 <label><input type="checkbox" data-price="150"> Dépannage électrique</label>
 <label><input type="checkbox" data-price="110"> Anticorrosion</label>
 
+<label><input type="checkbox" data-price="60"> Condensateur</label>
+<label><input type="checkbox" data-price="20"> Fusible</label>
+<label><input type="checkbox" data-price="15"> Connectique</label>
+<label><input type="checkbox" data-price="40"> Schrader</label>
+<label><input type="checkbox" data-price="80"> Brasure</label>
+
 <input id="fluide" placeholder="Fluide €">
 
 <h3>Total : <span id="total">0 €</span></h3>
 
-<canvas id="sig" width="300" height="150"></canvas>
+<p>
+Le client accepte la réalisation immédiate des travaux et le paiement à la fin.
+</p>
+
+<h4>Signature client</h4>
+<canvas id="sigClient" width="300" height="150"></canvas>
+
+<h4>Signature technicien</h4>
+<canvas id="sigTech" width="300" height="150"></canvas>
+
 <button onclick="calc()">Calculer</button>
+<button onclick="save()">💾 Enregistrer</button>
+<button onclick="pdf()">📄 PDF</button>
+<button onclick="wa()">📲 WhatsApp</button>
+<button onclick="mail()">📧 Mail</button>
+
 </div>
 
-<!-- DEVIS -->
-<div id="devis" class="section">
-<h3>Devis</h3>
-<textarea id="devisTxt"></textarea>
-<button onclick="genDevis()">Générer</button>
-<button onclick="pdf()">PDF</button>
-<button onclick="wa()">WhatsApp</button>
+<!-- HISTORIQUE -->
+<div id="hist" class="section">
+<h3>Historique clients</h3>
+<input id="search" placeholder="Rechercher" oninput="searchClient()">
+<ul id="list"></ul>
 </div>
 
 <script>
 
+// NAV
 function show(id){
  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
  document.getElementById(id).classList.add('active');
 }
 
+// SIGNATURE
+function init(id){
+ let c=document.getElementById(id);
+ let ctx=c.getContext("2d");
+ let d=false;
+ c.onmousedown=()=>d=true;
+ c.onmouseup=()=>d=false;
+ c.onmousemove=e=>{
+  if(!d) return;
+  ctx.lineTo(e.offsetX,e.offsetY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(e.offsetX,e.offsetY);
+ };
+}
+init("sigClient"); init("sigTech");
+
 // DIAGNOSTIC
 function diagnostic(){
- let bp=parseFloat(bp.value);
- let hp=parseFloat(hp.value);
- let amp=parseFloat(amp.value);
  let r="";
- if(bp<3 && hp<10) r="Manque fluide";
- else if(bp<3 && hp>=12) r="Détendeur / évapo";
- if(amp<2) r+=" | Pas alim";
- res.innerText=r;
+ let bp=parseFloat(bp.value), hp=parseFloat(hp.value), amp=parseFloat(amp.value), ampNom=parseFloat(ampNom.value);
+
+ if(bp<3 && hp<10) r+="Manque fluide\n";
+ if(bp<3 && hp>=12) r+="Détendeur / évapo\n";
+ if(amp<2) r+="Pas alimentation\n";
+
+ if(!isNaN(ampNom)){
+  if(amp<ampNom*0.6) r+="Intensité trop faible\n";
+ }
+
+ diagRes.innerText=r;
 }
 
 // DEPANNAGE
 function depannage(){
- let p=panne.value;
- let r="";
- if(p==="ventil") r="Vérifier condensateur / moteur";
+ let p=panne.value, r="";
+ if(p==="ventil") r="Condensateur / moteur / carte";
  if(p==="comp") r="Relais / carte / compresseur";
  if(p==="alim") r="Disjoncteur / fusible";
+ if(p==="intensite") r="Faible=manque charge / Forte=contrainte";
  depRes.innerText=r;
 }
 
-// BON
+// CALCUL
 function calc(){
  let t=0;
  document.querySelectorAll("[data-price]").forEach(e=>{
   if(e.checked) t+=parseFloat(e.dataset.price);
  });
+
  if(multiCheck.checked){
   let ui=parseInt(nbUI.value);
   if(ui>=2) t+=160+(ui-2)*50;
  }
+
  let f=parseFloat(fluide.value);
  if(!isNaN(f)) t+=f;
+
  total.innerText=t+" €";
 }
 
-// DEVIS
-function genDevis(){
- devisTxt.value="Devis client "+client.value+"\nTotal "+total.innerText;
+// HISTORIQUE
+let clients=JSON.parse(localStorage.getItem("clients")||"[]");
+
+function save(){
+ let entry={client:client.value,total:total.innerText,date:new Date().toLocaleString()};
+ clients.push(entry);
+ localStorage.setItem("clients",JSON.stringify(clients));
+ display();
 }
 
+function display(){
+ list.innerHTML="";
+ clients.forEach(c=>{
+  let li=document.createElement("li");
+  li.innerText=c.client+" - "+c.total;
+  list.appendChild(li);
+ });
+}
+
+function searchClient(){
+ let val=search.value.toLowerCase();
+ list.innerHTML="";
+ clients.filter(c=>c.client.toLowerCase().includes(val)).forEach(c=>{
+  let li=document.createElement("li");
+  li.innerText=c.client+" - "+c.total;
+  list.appendChild(li);
+ });
+}
+
+// EXPORT
 function pdf(){
  let w=window.open();
- w.document.write(devisTxt.value);
+ w.document.write(document.getElementById("doc").innerHTML);
  w.print();
 }
 
 function wa(){
- window.open("https://wa.me/?text="+encodeURIComponent(devisTxt.value));
+ window.open("https://wa.me/?text="+encodeURIComponent("Intervention "+client.value+" "+total.innerText));
 }
+
+function mail(){
+ window.location.href="mailto:?subject=Intervention&body="+encodeURIComponent(client.value+" "+total.innerText);
+}
+
+display();
 
 </script>
 
