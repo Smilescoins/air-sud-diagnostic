@@ -3,153 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Air Sud Éco-Confort</title>
 
 <style>
-body { font-family: Arial; padding:15px; background:#fff; color:#000; }
-h2, h3 { text-align:center; }
-table { width:100%; border-collapse: collapse; margin-top:10px; }
-td, th { border:1px solid black; padding:8px; }
-button { width:100%; padding:12px; margin-top:10px; }
+body { font-family: Arial; margin:0; }
+.nav { display:flex; background:#0f172a; }
+.nav button {
+  flex:1; padding:12px; border:none; color:white; background:#1e293b;
+}
+.section { display:none; padding:15px; }
+.active { display:block; }
+input, textarea, select { width:100%; padding:10px; margin:5px 0; }
+button { padding:10px; margin-top:5px; width:100%; }
 canvas { border:1px solid black; }
 </style>
-
 </head>
 
 <body>
 
-<h2>Air Sud Éco-Confort</h2>
-<p style="text-align:center">
-Entretien et maintenance des climatisations<br>
-34350 Valras-Plage<br>
-airsudecoconfort.fr / 07 71 13 65 48
-</p>
+<div class="nav">
+<button onclick="show('diag')">🔧 Diagnostic</button>
+<button onclick="show('dep')">⚡ Dépannage</button>
+<button onclick="show('bon')">📋 Bon</button>
+<button onclick="show('devis')">💰 Devis</button>
+</div>
 
-<h3>BON D’ACCEPTATION DES TRAVAUX & SERVICES</h3>
+<!-- DIAGNOSTIC -->
+<div id="diag" class="section active">
+<h3>Diagnostic</h3>
+<input id="bp" placeholder="BP">
+<input id="hp" placeholder="HP">
+<input id="amp" placeholder="Intensité">
+<button onclick="diagnostic()">Analyser</button>
+<pre id="res"></pre>
+</div>
 
-<table>
-<tr><td>Client :</td><td><input id="client"></td></tr>
-<tr><td>Adresse :</td><td><input id="adresse"></td></tr>
-<tr><td>Date :</td><td><input id="date"></td></tr>
-</table>
+<!-- DEPANNAGE -->
+<div id="dep" class="section">
+<h3>Dépannage électrique</h3>
+<select id="panne">
+<option value="">Choisir panne</option>
+<option value="ventil">Ventilateur UE HS</option>
+<option value="comp">Compresseur ne démarre pas</option>
+<option value="alim">Pas d’alimentation</option>
+</select>
+<button onclick="depannage()">Afficher</button>
+<pre id="depRes"></pre>
+</div>
 
-<table>
+<!-- BON -->
+<div id="bon" class="section">
+<h3>Bon d’intervention</h3>
+<input id="client" placeholder="Client">
+<input id="adresse" placeholder="Adresse">
 
-<tr><td><input type="checkbox" data-price="110"> Entretien monosplit (110€)</td></tr>
+<label><input type="checkbox" data-price="110"> Entretien mono</label>
+<label><input type="checkbox" id="multiCheck"> Multisplit</label>
+<input id="nbUI" placeholder="Nb UI">
 
-<tr><td>
-<input type="checkbox" id="multiCheck"> Entretien multisplit<br>
-<input id="nbUI" placeholder="Nombre UI">
-</td></tr>
+<label><input type="checkbox" data-price="90"> Recherche fuite</label>
+<label><input type="checkbox" data-price="60"> Recharge MO</label>
+<label><input type="checkbox" data-price="150"> Dépannage électrique</label>
+<label><input type="checkbox" data-price="110"> Anticorrosion</label>
 
-<tr><td><input type="checkbox" data-price="90"> Recherche de fuite (90€)</td></tr>
-<tr><td><input type="checkbox" data-price="60"> Recharge fluide main d'œuvre (60€)</td></tr>
-<tr><td><input type="checkbox" data-price="110"> Traitement anticorrosion (110€)</td></tr>
-<tr><td><input type="checkbox" data-price="150"> Diagnostic / dépannage électrique (150€)</td></tr>
-
-<tr><td><input type="checkbox" data-price="60"> Remplacement condensateur (60€)</td></tr>
-<tr><td><input type="checkbox" data-price="20"> Remplacement fusible (20€)</td></tr>
-<tr><td><input type="checkbox" data-price="15"> Connectique (15€)</td></tr>
-<tr><td><input type="checkbox" data-price="40"> Valve Schrader (40€)</td></tr>
-<tr><td><input type="checkbox" data-price="80"> Brasure (80€)</td></tr>
-
-<tr><td>
-Fluide (saisie libre)<br>
-<input id="fluidePrix" placeholder="Montant €">
-</td></tr>
-
-</table>
+<input id="fluide" placeholder="Fluide €">
 
 <h3>Total : <span id="total">0 €</span></h3>
 
-<p>
-Le client accepte expressément la réalisation immédiate des travaux sélectionnés ci-dessus et s'engage à régler la totalité de la prestation à la fin de l’intervention.
-</p>
+<canvas id="sig" width="300" height="150"></canvas>
+<button onclick="calc()">Calculer</button>
+</div>
 
-<h3>Signature client</h3>
-<canvas id="signatureClient" width="300" height="150"></canvas>
-<button onclick="clearCanvas('signatureClient')">Effacer</button>
-
-<h3>Signature technicien</h3>
-<canvas id="signatureTech" width="300" height="150"></canvas>
-<button onclick="clearCanvas('signatureTech')">Effacer</button>
-
-<button onclick="calculTotal()">Calculer total</button>
-<button onclick="generatePDF()">📄 Générer PDF</button>
-<button onclick="sendMail()">📧 Envoyer email</button>
-<button onclick="sendWhatsApp()">📲 WhatsApp</button>
+<!-- DEVIS -->
+<div id="devis" class="section">
+<h3>Devis</h3>
+<textarea id="devisTxt"></textarea>
+<button onclick="genDevis()">Générer</button>
+<button onclick="pdf()">PDF</button>
+<button onclick="wa()">WhatsApp</button>
+</div>
 
 <script>
 
-// signature
-function initCanvas(id){
- let canvas=document.getElementById(id);
- let ctx=canvas.getContext("2d");
- let drawing=false;
-
- canvas.onmousedown=()=>drawing=true;
- canvas.onmouseup=()=>drawing=false;
- canvas.onmousemove=e=>{
-   if(!drawing) return;
-   ctx.lineTo(e.offsetX,e.offsetY);
-   ctx.stroke();
-   ctx.beginPath();
-   ctx.moveTo(e.offsetX,e.offsetY);
- };
-}
-initCanvas("signatureClient");
-initCanvas("signatureTech");
-
-function clearCanvas(id){
- let c=document.getElementById(id);
- c.getContext("2d").clearRect(0,0,c.width,c.height);
+function show(id){
+ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
 }
 
-// calcul total
-function calculTotal(){
+// DIAGNOSTIC
+function diagnostic(){
+ let bp=parseFloat(bp.value);
+ let hp=parseFloat(hp.value);
+ let amp=parseFloat(amp.value);
+ let r="";
+ if(bp<3 && hp<10) r="Manque fluide";
+ else if(bp<3 && hp>=12) r="Détendeur / évapo";
+ if(amp<2) r+=" | Pas alim";
+ res.innerText=r;
+}
 
- let total=0;
+// DEPANNAGE
+function depannage(){
+ let p=panne.value;
+ let r="";
+ if(p==="ventil") r="Vérifier condensateur / moteur";
+ if(p==="comp") r="Relais / carte / compresseur";
+ if(p==="alim") r="Disjoncteur / fusible";
+ depRes.innerText=r;
+}
 
- document.querySelectorAll("input[type=checkbox]").forEach(el=>{
-   if(el.checked && el.dataset.price){
-     total += parseFloat(el.dataset.price);
-   }
+// BON
+function calc(){
+ let t=0;
+ document.querySelectorAll("[data-price]").forEach(e=>{
+  if(e.checked) t+=parseFloat(e.dataset.price);
  });
-
- // multisplit
- if(document.getElementById("multiCheck").checked){
-   let ui=parseInt(document.getElementById("nbUI").value);
-   if(ui>=2){
-     total += 160 + (ui-2)*50;
-   }
+ if(multiCheck.checked){
+  let ui=parseInt(nbUI.value);
+  if(ui>=2) t+=160+(ui-2)*50;
  }
-
- // fluide
- let fluide=parseFloat(document.getElementById("fluidePrix").value);
- if(!isNaN(fluide)) total+=fluide;
-
- document.getElementById("total").innerText=total+" €";
+ let f=parseFloat(fluide.value);
+ if(!isNaN(f)) t+=f;
+ total.innerText=t+" €";
 }
 
-// PDF simple
-function generatePDF(){
- let contenu = document.body.innerHTML;
+// DEVIS
+function genDevis(){
+ devisTxt.value="Devis client "+client.value+"\nTotal "+total.innerText;
+}
+
+function pdf(){
  let w=window.open();
- w.document.write(contenu);
+ w.document.write(devisTxt.value);
  w.print();
 }
 
-// email
-function sendMail(){
- let txt="Devis Air Sud Éco-Confort\nTotal : "+document.getElementById("total").innerText;
- window.location.href="mailto:?subject=Devis climatisation&body="+encodeURIComponent(txt);
-}
-
-// WhatsApp
-function sendWhatsApp(){
- let txt="Devis Air Sud Éco-Confort\nTotal : "+document.getElementById("total").innerText;
- window.open("https://wa.me/?text="+encodeURIComponent(txt));
+function wa(){
+ window.open("https://wa.me/?text="+encodeURIComponent(devisTxt.value));
 }
 
 </script>
