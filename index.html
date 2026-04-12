@@ -11,7 +11,7 @@ body {font-family:Arial;background:#f5f5f5;padding:10px;}
 .card {background:white;padding:15px;margin-bottom:15px;border-radius:10px;}
 input, textarea {width:100%;padding:8px;margin:5px 0;}
 button {width:100%;padding:12px;background:orange;color:white;border:none;margin-top:5px;}
-canvas {border:1px solid black;width:100%;height:100px;}
+canvas {border:1px solid black;width:100%;height:150px;touch-action:none;}
 </style>
 </head>
 
@@ -22,24 +22,18 @@ canvas {border:1px solid black;width:100%;height:100px;}
 <div class="card">
 <input id="client" placeholder="Nom client">
 <input id="adresse" placeholder="Adresse">
-<input type="file" id="photo">
 </div>
 
 <div class="card">
 <input id="bp" placeholder="BP">
 <input id="hp" placeholder="HP">
-<input id="amp" placeholder="Intensité">
-<input id="amb" placeholder="Température ambiante">
-<input id="souf" placeholder="Température soufflage">
-
 <button onclick="diagnostic()">Diagnostic</button>
 <pre id="result"></pre>
 </div>
 
 <div class="card">
-<label><input type="checkbox" class="p" value="110"> Entretien</label><br>
-<label><input type="checkbox" class="p" value="90"> Fuite</label><br>
-<label><input type="checkbox" class="p" value="150"> Électrique</label><br>
+<label><input type="checkbox" class="p" value="90"> Recherche fuite</label><br>
+<label><input type="checkbox" class="p" value="150"> Diagnostic électrique</label><br>
 
 <input id="fluide" placeholder="Fluide €">
 <button onclick="calc()">Total</button>
@@ -47,38 +41,35 @@ Total : <span id="total">0</span> €
 </div>
 
 <div class="card">
+Signature client :
 <canvas id="sign"></canvas>
 <button onclick="clearSign()">Effacer</button>
 </div>
 
 <div class="card">
-<button onclick="generate()">Rapport</button>
+<button onclick="generate()">Générer rapport</button>
 <button onclick="pdf()">PDF</button>
-<button onclick="wa()">WhatsApp</button>
-<button onclick="save()">Historique</button>
 <textarea id="rapport"></textarea>
 </div>
-
-<pre id="hist"></pre>
 
 <script>
 
 function diagnostic(){
-let bp=parseFloat(bp.value);
-let hp=parseFloat(hp.value);
+let bp=parseFloat(document.getElementById("bp").value);
+let hp=parseFloat(document.getElementById("hp").value);
+
 let txt="";
+if(bp<3 && hp<10) txt="Manque de fluide";
+if(bp>6 && hp<12) txt="Compresseur HS probable";
 
-if(bp<3 && hp<10){txt+="Manque fluide\n";document.querySelectorAll(".p")[1].checked=true;}
-if(bp>6 && hp<12){txt+="Compresseur HS probable\n";}
-
-result.innerText=txt;
+document.getElementById("result").innerText=txt;
 }
 
 function calc(){
 let t=0;
 document.querySelectorAll(".p").forEach(c=>{if(c.checked)t+=+c.value});
-t+=+fluide.value||0;
-total.innerText=t;
+t+=+document.getElementById("fluide").value||0;
+document.getElementById("total").innerText=t;
 }
 
 function generate(){
@@ -93,35 +84,38 @@ function pdf(){
 const { jsPDF } = window.jspdf;
 let doc=new jsPDF();
 doc.text(rapport.value,10,10);
+
+// signature intégrée
+let img=canvas.toDataURL("image/png");
+doc.addImage(img,'PNG',10,60,100,40);
+
 doc.save("rapport.pdf");
 }
 
-function wa(){
-window.open("https://wa.me/?text="+encodeURIComponent(rapport.value));
-}
+// SIGNATURE TACTILE
+let canvas=document.getElementById("sign");
+let ctx=canvas.getContext("2d");
 
-function save(){
-let d=rapport.value+"\n---\n";
-let h=localStorage.getItem("h")||"";
-localStorage.setItem("h",d+h);
-hist.innerText=localStorage.getItem("h");
-}
+let drawing=false;
 
-let c=document.getElementById("sign");
-let ctx=c.getContext("2d");
-let draw=false;
+canvas.addEventListener("touchstart",e=>{
+drawing=true;
+let t=e.touches[0];
+ctx.moveTo(t.clientX,t.clientY);
+});
 
-c.onmousedown=()=>draw=true;
-c.onmouseup=()=>draw=false;
-c.onmousemove=e=>{
-if(!draw)return;
-ctx.lineTo(e.offsetX,e.offsetY);
+canvas.addEventListener("touchmove",e=>{
+if(!drawing)return;
+let t=e.touches[0];
+ctx.lineTo(t.clientX,t.clientY);
 ctx.stroke();
-};
+});
 
-function clearSign(){ctx.clearRect(0,0,c.width,c.height);}
+canvas.addEventListener("touchend",()=>drawing=false);
 
-hist.innerText=localStorage.getItem("h")||"";
+function clearSign(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+}
 
 </script>
 
