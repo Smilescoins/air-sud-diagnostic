@@ -166,7 +166,58 @@ function clearSign(){
 document.getElementById("sign1").getContext("2d").clearRect(0,0,300,100);
 document.getElementById("sign2").getContext("2d").clearRect(0,0,300,100);
 }
+function initSignature(canvasId){
+let canvas = document.getElementById(canvasId);
+let ctx = canvas.getContext("2d");
+let drawing = false;
 
+function position(e){
+let rect = canvas.getBoundingClientRect();
+if(e.touches){
+return {
+x: e.touches[0].clientX - rect.left,
+y: e.touches[0].clientY - rect.top
+};
+}
+return {
+x: e.clientX - rect.left,
+y: e.clientY - rect.top
+};
+}
+
+function start(e){
+drawing = true;
+let pos = position(e);
+ctx.beginPath();
+ctx.moveTo(pos.x, pos.y);
+}
+
+function move(e){
+if(!drawing) return;
+e.preventDefault();
+let pos = position(e);
+ctx.lineTo(pos.x, pos.y);
+ctx.stroke();
+}
+
+function end(){
+drawing = false;
+}
+
+canvas.addEventListener("mousedown", start);
+canvas.addEventListener("mousemove", move);
+canvas.addEventListener("mouseup", end);
+
+canvas.addEventListener("touchstart", start);
+canvas.addEventListener("touchmove", move);
+canvas.addEventListener("touchend", end);
+}
+
+// activation
+window.onload = function(){
+initSignature("sign1");
+initSignature("sign2");
+}
 </script>
 
 </body>
