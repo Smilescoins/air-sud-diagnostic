@@ -10,12 +10,14 @@ body {font-family:Arial;background:#f5f5f5;padding:10px;}
 input, textarea {width:100%;padding:8px;margin:5px 0;}
 button {width:100%;padding:12px;background:orange;color:white;border:none;margin-top:5px;}
 canvas {border:1px solid black;width:100%;height:100px;}
+h2{text-align:center;}
 </style>
 </head>
 
 <body>
 
 <h2>Air Sud Éco-Confort</h2>
+<p style="text-align:center;">Bon d’acceptation & intervention</p>
 
 <div class="card">
 <h3>Client</h3>
@@ -24,12 +26,8 @@ canvas {border:1px solid black;width:100%;height:100px;}
 </div>
 
 <div class="card">
-<h3>Photo intervention</h3>
-<input type="file" id="photo">
-</div>
-
-<div class="card">
 <h3>Diagnostic</h3>
+
 <input id="bp" placeholder="BP">
 <input id="hp" placeholder="HP">
 <input id="amp" placeholder="Intensité">
@@ -37,32 +35,33 @@ canvas {border:1px solid black;width:100%;height:100px;}
 <input id="souf" placeholder="Température soufflage">
 
 <button onclick="diagnostic()">Lancer diagnostic</button>
+
 <pre id="result"></pre>
 </div>
 
 <div class="card">
-<h3>Devis</h3>
+<h3>Devis (selon ta fiche)</h3>
 
-<label><input type="checkbox" value="110"> Entretien monosplit</label><br>
-<label><input type="checkbox" value="50"> Multisplit</label><br>
-<label><input type="checkbox" value="90"> Recherche fuite</label><br>
-<label><input type="checkbox" value="60"> Recharge MO</label><br>
-<label><input type="checkbox" value="110"> Anticorrosion</label><br>
-<label><input type="checkbox" value="150"> Diagnostic électrique</label><br>
-<label><input type="checkbox" value="60"> Condensateur</label><br>
-<label><input type="checkbox" value="20"> Fusible</label><br>
-<label><input type="checkbox" value="15"> Connectique</label><br>
-<label><input type="checkbox" value="40"> Schrader</label><br>
-<label><input type="checkbox" value="80"> Brasure</label><br>
+<label><input type="checkbox" class="prix" value="110"> Entretien monosplit (110€)</label><br>
+<label><input type="checkbox" class="prix" value="50"> Multisplit (+50€)</label><br>
+<label><input type="checkbox" class="prix" value="90"> Recherche fuite (90€)</label><br>
+<label><input type="checkbox" class="prix" value="60"> Recharge fluide MO (60€)</label><br>
+<label><input type="checkbox" class="prix" value="110"> Traitement anticorrosion (110€)</label><br>
+<label><input type="checkbox" class="prix" value="150"> Diagnostic électrique (150€)</label><br>
+<label><input type="checkbox" class="prix" value="60"> Condensateur (60€)</label><br>
+<label><input type="checkbox" class="prix" value="20"> Fusible (20€)</label><br>
+<label><input type="checkbox" class="prix" value="15"> Connectique (15€)</label><br>
+<label><input type="checkbox" class="prix" value="40"> Schrader (40€)</label><br>
+<label><input type="checkbox" class="prix" value="80"> Brasure (80€)</label><br>
 
 <input id="fluide" placeholder="Fluide (€)">
-<button onclick="calculTotal()">Calculer total</button>
+<button onclick="total()">Calcul total</button>
 
 <h3>Total : <span id="total">0</span> €</h3>
 </div>
 
 <div class="card">
-<h3>Signatures</h3>
+<h3>Signature</h3>
 
 Client :
 <canvas id="signClient"></canvas>
@@ -74,77 +73,85 @@ Technicien :
 </div>
 
 <div class="card">
-<button onclick="generate()">Générer document</button>
+<button onclick="generate()">Générer document complet</button>
 <button onclick="printDoc()">PDF</button>
 <button onclick="sendWhatsApp()">WhatsApp</button>
-<button onclick="saveHistorique()">Sauvegarder client</button>
+<button onclick="saveHistorique()">Sauvegarder</button>
 
-<textarea id="rapport" rows="12"></textarea>
+<textarea id="rapport" rows="15"></textarea>
 </div>
 
 <div class="card">
 <h3>Historique</h3>
-<pre id="historique"></pre>
+<pre id="hist"></pre>
 </div>
 
 <script>
 
 function diagnostic(){
-let bp=parseFloat(bp.value);
-let hp=parseFloat(hp.value);
+
+let bp=parseFloat(document.getElementById("bp").value);
+let hp=parseFloat(document.getElementById("hp").value);
 let amp=parseFloat(document.getElementById("amp").value);
 let amb=parseFloat(document.getElementById("amb").value);
 let souf=parseFloat(document.getElementById("souf").value);
 
-let res="";
+let txt="";
 
 if(bp<3 && hp<10){
-res+="Manque de fluide → recherche fuite\n";
-document.querySelectorAll("input[type=checkbox]")[2].checked=true;
+txt+="❌ Manque de fluide → recherche fuite\n";
+document.querySelectorAll(".prix")[2].checked=true;
 }
 
 if(bp>6 && hp<12){
-res+="Compresseur fatigué (déjà HS possible)\n";
+txt+="⚠️ Compresseur fatigué (déjà HS possible)\n";
 }
 
 if(hp>20){
-res+="Condenseur encrassé\n";
+txt+="🔥 Condenseur encrassé\n";
+}
+
+if(amp>8){
+txt+="⚡ Intensité élevée → contrôle électrique\n";
+document.querySelectorAll(".prix")[5].checked=true;
 }
 
 if(!isNaN(amb)&&!isNaN(souf)){
 let delta=amb-souf;
-if(delta<5) res+="Mauvais rendement\n";
-if(delta>8) res+="Bon rendement\n";
+if(delta<5) txt+="❌ Mauvais rendement\n";
+if(delta>8) txt+="✅ Bon rendement\n";
 }
 
-if(amp>8){
-res+="Intensité élevée → contrôle électrique\n";
-document.querySelectorAll("input[type=checkbox]")[5].checked=true;
+document.getElementById("result").innerText=txt;
 }
 
-document.getElementById("result").innerText=res;
-}
-
-function calculTotal(){
-let total=0;
-document.querySelectorAll("input[type=checkbox]").forEach(c=>{
-if(c.checked) total+=parseFloat(c.value);
+function total(){
+let t=0;
+document.querySelectorAll(".prix").forEach(c=>{
+if(c.checked) t+=parseFloat(c.value);
 });
-let fluide=parseFloat(document.getElementById("fluide").value)||0;
-total+=fluide;
-document.getElementById("total").innerText=total;
+t+=parseFloat(document.getElementById("fluide").value)||0;
+document.getElementById("total").innerText=t;
 }
 
 function generate(){
-let txt="";
+
 let date=new Date().toLocaleString();
 
-txt+="BON D’INTERVENTION\n\n";
-txt+="Date : "+date+"\n";
+let txt="BON D’ACCEPTATION & INTERVENTION\n\n";
+txt+="Date : "+date+"\n\n";
 txt+="Client : "+client.value+"\n";
 txt+="Adresse : "+adresse.value+"\n\n";
-txt+="Diagnostic :\n"+result.innerText+"\n\n";
-txt+="Total : "+total.innerText+" €\n";
+
+txt+="DIAGNOSTIC :\n"+result.innerText+"\n";
+
+txt+="TOTAL : "+document.getElementById("total").innerText+" €\n\n";
+
+txt+="Le client accepte les travaux.\n";
+txt+="Paiement à la fin de l’intervention.\n\n";
+
+txt+="Signature client : __________\n";
+txt+="Signature technicien : __________";
 
 rapport.value=txt;
 }
@@ -161,10 +168,10 @@ window.open("https://wa.me/?text="+text);
 }
 
 function saveHistorique(){
-let data=rapport.value+"\n----------------\n";
-let old=localStorage.getItem("hist")||"";
-localStorage.setItem("hist",data+old);
-document.getElementById("historique").innerText=localStorage.getItem("hist");
+let data=rapport.value+"\n------\n";
+let old=localStorage.getItem("h")||"";
+localStorage.setItem("h",data+old);
+document.getElementById("hist").innerText=localStorage.getItem("h");
 }
 
 function setupCanvas(id){
@@ -189,7 +196,7 @@ canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
 setupCanvas("signClient");
 setupCanvas("signTech");
 
-document.getElementById("historique").innerText=localStorage.getItem("hist")||"";
+document.getElementById("hist").innerText=localStorage.getItem("h")||"";
 
 </script>
 
