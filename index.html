@@ -1,129 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Air Sud Éco-Confort</title>
-<style>
-body{font-family:Arial;background:#0f172a;color:white;padding:20px}
-button{padding:10px;margin:5px;border:none;border-radius:8px;background:orange;color:white}
-.card{background:#1e293b;padding:15px;border-radius:10px;margin-bottom:10px}
-</style>
-</head>
 
+<style>
+body {font-family: Arial; background:#0f172a; color:white; padding:15px;}
+.card {background:#1e293b; padding:15px; margin-bottom:15px; border-radius:10px;}
+input, textarea {width:100%; padding:10px; margin:5px 0; border-radius:5px; border:none;}
+button {width:100%; padding:12px; margin-top:5px; border:none; border-radius:5px; font-weight:bold;}
+.btn-orange{background:orange;}
+.btn-blue{background:#3b82f6;}
+.btn-green{background:#22c55e;}
+canvas{background:white; border-radius:5px;}
+</style>
+
+</head>
 <body>
 
-<h1>Air Sud Éco-Confort</h1>
+<h2>Air Sud Éco-Confort</h2>
+<p>Un partenaire de confiance avant tout</p>
 
-<!-- MENU -->
-<button onclick="show('diag')">Diagnostic</button>
-<button onclick="show('usa')">Mode USA</button>
-<button onclick="show('doc')">Intervention</button>
-<button onclick="show('hist')">Historique</button>
-
-<!-- DIAGNOSTIC -->
-<div id="diag" class="card">
-<h2>Diagnostic</h2>
+<div class="card">
+<h3>Diagnostic</h3>
 <input id="bp" placeholder="BP">
 <input id="hp" placeholder="HP">
-<input id="amp" placeholder="Intensité">
 <input id="amb" placeholder="Temp ambiante">
 <input id="souf" placeholder="Temp soufflage">
-<button onclick="diagnostic()">Analyser</button>
-<pre id="res"></pre>
+<button class="btn-orange" onclick="diagnostic()">Analyser</button>
+<pre id="result"></pre>
 </div>
 
-<!-- MODE USA -->
-<div id="usa" class="card" style="display:none">
-<h2>Mode USA</h2>
-<button onclick="usa()">Pas de démarrage</button>
-<pre id="usaRes"></pre>
+<div class="card">
+<h3>Prestations</h3>
+
+<label><input type="checkbox" value="110"> Entretien monosplit 110€</label>
+
+<label>Multisplit (nombre UI)</label>
+<input id="ui" type="number">
+
+<label><input type="checkbox" value="90"> Recherche fuite 90€</label>
+<label><input type="checkbox" value="60"> Recharge MO 60€</label>
+<label><input type="checkbox" value="150"> Diagnostic électrique 150€</label>
+<label><input type="checkbox" value="110"> Traitement anticorrosion 110€</label>
+
+<h4>Dépannage</h4>
+<label><input type="checkbox" value="60"> Condensateur 60€</label>
+<label><input type="checkbox" value="20"> Fusible 20€</label>
+<label><input type="checkbox" value="15"> Connectique 15€</label>
+<label><input type="checkbox" value="40"> Schrader 40€</label>
+<label><input type="checkbox" value="80"> Brasure 80€</label>
+
+<h4>Fluide</h4>
+<input id="fluide" placeholder="Montant fluide €">
+
+<button class="btn-orange" onclick="total()">Calcul total</button>
+<pre id="total"></pre>
 </div>
 
-<!-- INTERVENTION -->
-<div id="doc" class="card" style="display:none">
-<h2>Intervention</h2>
+<div class="card">
+<h3>Client / Rapport</h3>
 
 <input id="client" placeholder="Nom client">
+<input id="adresse" placeholder="Adresse">
 
-<br><br>
+<textarea id="rapport"></textarea>
 
-<label><input type="checkbox" value="110"> Entretien monosplit 110€</label><br>
-<label><input type="checkbox" value="160"> Multisplit 160€</label><br>
-<label><input type="checkbox" value="90"> Recherche fuite 90€</label><br>
-<label><input type="checkbox" value="60"> Recharge MO 60€</label><br>
+<button class="btn-blue" onclick="generate()">📄 Générer rapport</button>
+<button class="btn-green" onclick="printRapport()">🖨️ PDF</button>
+<button class="btn-orange" onclick="sendWhatsApp()">📲 WhatsApp</button>
 
-<br>
+<h3>Signature</h3>
+<canvas id="signature" width="300" height="150"></canvas>
+<button onclick="clearSignature()">Effacer signature</button>
 
-<button onclick="total()">Calcul total</button>
-<pre id="total"></pre>
-
-<button onclick="save()">Enregistrer</button>
-</div>
-
-<!-- HISTORIQUE -->
-<div id="hist" class="card" style="display:none">
-<h2>Historique</h2>
-<div id="list"></div>
 </div>
 
 <script>
 
-function show(id){
- document.getElementById("diag").style.display="none";
- document.getElementById("usa").style.display="none";
- document.getElementById("doc").style.display="none";
- document.getElementById("hist").style.display="none";
- document.getElementById(id).style.display="block";
+// SIGNATURE
+let canvas=document.getElementById("signature");
+let ctx=canvas.getContext("2d");
+let draw=false;
+
+canvas.onmousedown=()=>draw=true;
+canvas.onmouseup=()=>draw=false;
+canvas.onmousemove=e=>{
+ if(!draw)return;
+ ctx.lineWidth=2;
+ ctx.lineCap="round";
+ ctx.lineTo(e.offsetX,e.offsetY);
+ ctx.stroke();
+ ctx.beginPath();
+ ctx.moveTo(e.offsetX,e.offsetY);
+};
+
+function clearSignature(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
 // DIAGNOSTIC
 function diagnostic(){
- let bp=+document.getElementById("bp").value;
- let hp=+document.getElementById("hp").value;
- let amb=+document.getElementById("amb").value;
- let souf=+document.getElementById("souf").value;
-
+ let bp=+bp.value;
+ let hp=+hp.value;
+ let amb=+amb.value;
+ let souf=+souf.value;
  let dt=amb-souf;
 
- let r="";
- if(bp<3 && hp<10) r="Manque de fluide";
- else if(bp<3) r="Restriction possible";
- else if(hp>20) r="Problème condensation";
- else r="RAS";
+ let res="";
+ if(bp<3 && hp<10) res="Manque de fluide";
+ else if(bp<3) res="Restriction";
+ else if(hp>20) res="Condensation";
+ else res="RAS";
 
- document.getElementById("res").innerText="ΔT="+dt+"\n"+r;
-}
-
-// USA
-function usa(){
- document.getElementById("usaRes").innerText=
- "Défaut électrique probable - vérifier disjoncteur, alimentation, fusible ou condensateur";
+ result.innerText="ΔT="+dt+"\n"+res;
 }
 
 // TOTAL
 function total(){
  let sum=0;
- document.querySelectorAll("#doc input[type=checkbox]").forEach(c=>{
-   if(c.checked) sum+=+c.value;
+
+ document.querySelectorAll("input[type=checkbox]").forEach(c=>{
+  if(c.checked) sum+=+c.value;
  });
+
+ let ui=+document.getElementById("ui").value;
+ if(ui>=2) sum+=160+(ui-2)*50;
+
+ let fluide=+document.getElementById("fluide").value;
+ if(!isNaN(fluide)) sum+=fluide;
+
  document.getElementById("total").innerText=sum+" €";
 }
 
-// HISTO
-let hist=[];
+// RAPPORT
+function generate(){
+ let txt="Client: "+client.value+"\n";
+ txt+="Diagnostic: "+result.innerText+"\n";
+ txt+="Total: "+document.getElementById("total").innerText+"\n";
+ txt+="\nLe client accepte les travaux et le paiement.";
 
-function save(){
- let name=document.getElementById("client").value;
- let t=document.getElementById("total").innerText;
-
- hist.push(name+" - "+t);
- render();
+ rapport.value=txt;
 }
 
-function render(){
- let html="";
- hist.forEach(h=>html+="<div>"+h+"</div>");
- document.getElementById("list").innerHTML=html;
+// PDF
+function printRapport(){
+ let w=window.open();
+ w.document.write("<pre>"+rapport.value+"</pre>");
+ w.print();
+}
+
+// WHATSAPP
+function sendWhatsApp(){
+ window.open("https://wa.me/?text="+encodeURIComponent(rapport.value));
 }
 
 </script>
