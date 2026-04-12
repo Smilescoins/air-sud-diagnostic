@@ -4,199 +4,124 @@
 <meta charset="UTF-8">
 <title>Air Sud Éco-Confort</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body {font-family:Arial;background:#f5f5f5;padding:10px;}
 .card {background:white;padding:15px;margin-bottom:15px;border-radius:10px;}
 input, textarea {width:100%;padding:8px;margin:5px 0;}
 button {width:100%;padding:12px;background:orange;color:white;border:none;margin-top:5px;}
 canvas {border:1px solid black;width:100%;height:100px;}
-h2{text-align:center;}
 </style>
 </head>
 
 <body>
 
 <h2>Air Sud Éco-Confort</h2>
-<p style="text-align:center;">Bon d’acceptation & intervention</p>
 
 <div class="card">
-<h3>Client</h3>
 <input id="client" placeholder="Nom client">
 <input id="adresse" placeholder="Adresse">
+<input type="file" id="photo">
 </div>
 
 <div class="card">
-<h3>Diagnostic</h3>
-
 <input id="bp" placeholder="BP">
 <input id="hp" placeholder="HP">
 <input id="amp" placeholder="Intensité">
 <input id="amb" placeholder="Température ambiante">
 <input id="souf" placeholder="Température soufflage">
 
-<button onclick="diagnostic()">Lancer diagnostic</button>
-
+<button onclick="diagnostic()">Diagnostic</button>
 <pre id="result"></pre>
 </div>
 
 <div class="card">
-<h3>Devis (selon ta fiche)</h3>
+<label><input type="checkbox" class="p" value="110"> Entretien</label><br>
+<label><input type="checkbox" class="p" value="90"> Fuite</label><br>
+<label><input type="checkbox" class="p" value="150"> Électrique</label><br>
 
-<label><input type="checkbox" class="prix" value="110"> Entretien monosplit (110€)</label><br>
-<label><input type="checkbox" class="prix" value="50"> Multisplit (+50€)</label><br>
-<label><input type="checkbox" class="prix" value="90"> Recherche fuite (90€)</label><br>
-<label><input type="checkbox" class="prix" value="60"> Recharge fluide MO (60€)</label><br>
-<label><input type="checkbox" class="prix" value="110"> Traitement anticorrosion (110€)</label><br>
-<label><input type="checkbox" class="prix" value="150"> Diagnostic électrique (150€)</label><br>
-<label><input type="checkbox" class="prix" value="60"> Condensateur (60€)</label><br>
-<label><input type="checkbox" class="prix" value="20"> Fusible (20€)</label><br>
-<label><input type="checkbox" class="prix" value="15"> Connectique (15€)</label><br>
-<label><input type="checkbox" class="prix" value="40"> Schrader (40€)</label><br>
-<label><input type="checkbox" class="prix" value="80"> Brasure (80€)</label><br>
-
-<input id="fluide" placeholder="Fluide (€)">
-<button onclick="total()">Calcul total</button>
-
-<h3>Total : <span id="total">0</span> €</h3>
+<input id="fluide" placeholder="Fluide €">
+<button onclick="calc()">Total</button>
+Total : <span id="total">0</span> €
 </div>
 
 <div class="card">
-<h3>Signature</h3>
-
-Client :
-<canvas id="signClient"></canvas>
-<button onclick="clearCanvas('signClient')">Effacer</button>
-
-Technicien :
-<canvas id="signTech"></canvas>
-<button onclick="clearCanvas('signTech')">Effacer</button>
+<canvas id="sign"></canvas>
+<button onclick="clearSign()">Effacer</button>
 </div>
 
 <div class="card">
-<button onclick="generate()">Générer document complet</button>
-<button onclick="printDoc()">PDF</button>
-<button onclick="sendWhatsApp()">WhatsApp</button>
-<button onclick="saveHistorique()">Sauvegarder</button>
-
-<textarea id="rapport" rows="15"></textarea>
+<button onclick="generate()">Rapport</button>
+<button onclick="pdf()">PDF</button>
+<button onclick="wa()">WhatsApp</button>
+<button onclick="save()">Historique</button>
+<textarea id="rapport"></textarea>
 </div>
 
-<div class="card">
-<h3>Historique</h3>
 <pre id="hist"></pre>
-</div>
 
 <script>
 
 function diagnostic(){
-
-let bp=parseFloat(document.getElementById("bp").value);
-let hp=parseFloat(document.getElementById("hp").value);
-let amp=parseFloat(document.getElementById("amp").value);
-let amb=parseFloat(document.getElementById("amb").value);
-let souf=parseFloat(document.getElementById("souf").value);
-
+let bp=parseFloat(bp.value);
+let hp=parseFloat(hp.value);
 let txt="";
 
-if(bp<3 && hp<10){
-txt+="❌ Manque de fluide → recherche fuite\n";
-document.querySelectorAll(".prix")[2].checked=true;
+if(bp<3 && hp<10){txt+="Manque fluide\n";document.querySelectorAll(".p")[1].checked=true;}
+if(bp>6 && hp<12){txt+="Compresseur HS probable\n";}
+
+result.innerText=txt;
 }
 
-if(bp>6 && hp<12){
-txt+="⚠️ Compresseur fatigué (déjà HS possible)\n";
-}
-
-if(hp>20){
-txt+="🔥 Condenseur encrassé\n";
-}
-
-if(amp>8){
-txt+="⚡ Intensité élevée → contrôle électrique\n";
-document.querySelectorAll(".prix")[5].checked=true;
-}
-
-if(!isNaN(amb)&&!isNaN(souf)){
-let delta=amb-souf;
-if(delta<5) txt+="❌ Mauvais rendement\n";
-if(delta>8) txt+="✅ Bon rendement\n";
-}
-
-document.getElementById("result").innerText=txt;
-}
-
-function total(){
+function calc(){
 let t=0;
-document.querySelectorAll(".prix").forEach(c=>{
-if(c.checked) t+=parseFloat(c.value);
-});
-t+=parseFloat(document.getElementById("fluide").value)||0;
-document.getElementById("total").innerText=t;
+document.querySelectorAll(".p").forEach(c=>{if(c.checked)t+=+c.value});
+t+=+fluide.value||0;
+total.innerText=t;
 }
 
 function generate(){
-
-let date=new Date().toLocaleString();
-
-let txt="BON D’ACCEPTATION & INTERVENTION\n\n";
-txt+="Date : "+date+"\n\n";
-txt+="Client : "+client.value+"\n";
-txt+="Adresse : "+adresse.value+"\n\n";
-
-txt+="DIAGNOSTIC :\n"+result.innerText+"\n";
-
-txt+="TOTAL : "+document.getElementById("total").innerText+" €\n\n";
-
-txt+="Le client accepte les travaux.\n";
-txt+="Paiement à la fin de l’intervention.\n\n";
-
-txt+="Signature client : __________\n";
-txt+="Signature technicien : __________";
-
-rapport.value=txt;
+rapport.value=
+"Client:"+client.value+"\n"+
+"Adresse:"+adresse.value+"\n\n"+
+"Diagnostic:\n"+result.innerText+
+"\nTotal:"+total.innerText+"€";
 }
 
-function printDoc(){
-let w=window.open("");
-w.document.write("<pre>"+rapport.value+"</pre>");
-w.print();
+function pdf(){
+const { jsPDF } = window.jspdf;
+let doc=new jsPDF();
+doc.text(rapport.value,10,10);
+doc.save("rapport.pdf");
 }
 
-function sendWhatsApp(){
-let text=encodeURIComponent(rapport.value);
-window.open("https://wa.me/?text="+text);
+function wa(){
+window.open("https://wa.me/?text="+encodeURIComponent(rapport.value));
 }
 
-function saveHistorique(){
-let data=rapport.value+"\n------\n";
-let old=localStorage.getItem("h")||"";
-localStorage.setItem("h",data+old);
-document.getElementById("hist").innerText=localStorage.getItem("h");
+function save(){
+let d=rapport.value+"\n---\n";
+let h=localStorage.getItem("h")||"";
+localStorage.setItem("h",d+h);
+hist.innerText=localStorage.getItem("h");
 }
 
-function setupCanvas(id){
-let canvas=document.getElementById(id);
-let ctx=canvas.getContext("2d");
-let drawing=false;
+let c=document.getElementById("sign");
+let ctx=c.getContext("2d");
+let draw=false;
 
-canvas.addEventListener("mousedown",()=>drawing=true);
-canvas.addEventListener("mouseup",()=>drawing=false);
-canvas.addEventListener("mousemove",(e)=>{
-if(!drawing)return;
+c.onmousedown=()=>draw=true;
+c.onmouseup=()=>draw=false;
+c.onmousemove=e=>{
+if(!draw)return;
 ctx.lineTo(e.offsetX,e.offsetY);
 ctx.stroke();
-});
-}
+};
 
-function clearCanvas(id){
-let canvas=document.getElementById(id);
-canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
-}
+function clearSign(){ctx.clearRect(0,0,c.width,c.height);}
 
-setupCanvas("signClient");
-setupCanvas("signTech");
-
-document.getElementById("hist").innerText=localStorage.getItem("h")||"";
+hist.innerText=localStorage.getItem("h")||"";
 
 </script>
 
