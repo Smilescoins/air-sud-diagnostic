@@ -6,17 +6,24 @@
 <title>Air Sud Éco-Confort</title>
 
 <style>
-body { font-family: Arial; background:#f5f5f5; padding:20px; }
-.card { background:white; padding:15px; margin-bottom:15px; border-radius:10px; }
-input, textarea { width:100%; padding:10px; margin:5px 0; }
-button { width:100%; padding:12px; background:orange; border:none; color:white; font-weight:bold; margin-top:5px;}
+body { font-family: Arial; background:#0f172a; color:white; padding:15px; }
+h2 { color:#3b82f6; }
+.card { background:#1e293b; padding:15px; margin-bottom:15px; border-radius:10px; }
+input, textarea { width:100%; padding:10px; margin:5px 0; border-radius:5px; border:none; }
+button { width:100%; padding:12px; margin-top:5px; border:none; border-radius:5px; font-weight:bold; }
+.btn-orange { background:orange; color:white; }
+.btn-blue { background:#3b82f6; color:white; }
+.btn-green { background:#22c55e; color:white; }
+canvas { background:white; border-radius:5px; margin-top:10px; }
+img { width:100%; margin-top:10px; border-radius:5px; }
+pre { white-space: pre-wrap; }
 </style>
 </head>
 
 <body>
 
 <h2>Air Sud Éco-Confort</h2>
-<p><i>Un partenaire de confiance avant tout</i></p>
+<p>Un partenaire de confiance avant tout</p>
 
 <div class="card">
 <h3>Diagnostic</h3>
@@ -27,7 +34,7 @@ button { width:100%; padding:12px; background:orange; border:none; color:white; 
 <input id="amb" placeholder="Température ambiante">
 <input id="souf" placeholder="Température soufflage">
 
-<button onclick="diagnostic()">Lancer diagnostic</button>
+<button class="btn-orange" onclick="diagnostic()">Lancer diagnostic</button>
 
 <pre id="result"></pre>
 </div>
@@ -40,117 +47,101 @@ button { width:100%; padding:12px; background:orange; border:none; color:white; 
 
 <textarea id="rapport" rows="10"></textarea>
 
-<button onclick="generate()">📄 Générer rapport complet</button>
-<button onclick="printRapport()">🖨️ Télécharger / Imprimer PDF</button>
+<button class="btn-blue" onclick="generate()">📄 Générer rapport</button>
+<button class="btn-green" onclick="printRapport()">🖨️ PDF</button>
+<button class="btn-orange" onclick="sendWhatsApp()">📲 WhatsApp</button>
+
+<h3>📸 Photo intervention</h3>
+<input type="file" accept="image/*" onchange="loadPhoto(event)">
+<img id="photoPreview">
+
+<h3>✍️ Signature client</h3>
+<canvas id="signature" width="300" height="150"></canvas>
+<button onclick="clearSignature()">Effacer signature</button>
+
 </div>
 
 <script>
 
+// PHOTO
+function loadPhoto(event){
+ let img = document.getElementById("photoPreview");
+ img.src = URL.createObjectURL(event.target.files[0]);
+}
+
+// SIGNATURE
+let canvas = document.getElementById("signature");
+let ctx = canvas.getContext("2d");
+let drawing = false;
+
+canvas.addEventListener("mousedown", ()=>drawing=true);
+canvas.addEventListener("mouseup", ()=>drawing=false);
+canvas.addEventListener("mousemove", draw);
+
+canvas.addEventListener("touchstart", ()=>drawing=true);
+canvas.addEventListener("touchend", ()=>drawing=false);
+canvas.addEventListener("touchmove", drawTouch);
+
+function draw(e){
+ if(!drawing) return;
+ ctx.lineWidth=2;
+ ctx.lineCap="round";
+ ctx.strokeStyle="black";
+ ctx.lineTo(e.offsetX,e.offsetY);
+ ctx.stroke();
+ ctx.beginPath();
+ ctx.moveTo(e.offsetX,e.offsetY);
+}
+
+function drawTouch(e){
+ e.preventDefault();
+ if(!drawing) return;
+ let rect=canvas.getBoundingClientRect();
+ let x=e.touches[0].clientX-rect.left;
+ let y=e.touches[0].clientY-rect.top;
+ ctx.lineTo(x,y);
+ ctx.stroke();
+ ctx.beginPath();
+ ctx.moveTo(x,y);
+}
+
+function clearSignature(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+// DIAGNOSTIC
 function diagnostic(){
-
- let bp = parseFloat(document.getElementById("bp").value);
- let hp = parseFloat(document.getElementById("hp").value);
- let amp = parseFloat(document.getElementById("amp").value);
- let amb = parseFloat(document.getElementById("amb").value);
- let souff = parseFloat(document.getElementById("souf").value);
-
- let delta = amb - souff;
-
- let res = "";
-
- if(isNaN(bp) || isNaN(hp)){
-   res="⚠️ Renseigne BP et HP minimum";
- }
-
- else{
-
-   if(bp<3 && hp<10){
-     res += "🔴 Manque de fluide probable\n👉 Vérifier fuite\n👉 Test azote\n\n";
-   }
-
-   if(bp<3 && hp>=12){
-     res += "❄️ Problème évaporateur / KVP\n👉 Vérifier détendeur / air\n\n";
-   }
-
-   if(bp>=4 && hp<10){
-     res += "🔥 Problème condensation / KVR\n👉 Vérifier ventilateur\n\n";
-   }
-
-   if(bp>6 && hp<12){
-     res += "⚠️ Compresseur fatigué\n👉 Mauvaise compression\n\n";
-   }
-
-   if(hp>20){
-     res += "🔥 Condenseur encrassé\n👉 Nettoyage nécessaire\n\n";
-   }
-
-   if(!isNaN(delta)){
-     if(delta < 5){
-       res += "🌡️ Mauvais rendement\n\n";
-     }
-     else if(delta >=8){
-       res += "✅ Bon rendement\n\n";
-     }
-   }
-
-   if(!isNaN(amp)){
-     if(amp < 3){
-       res += "⚡ Intensité faible\n";
-     }
-     else if(amp > 8){
-       res += "⚡ Intensité élevée\n";
-     }
-   }
-
- }
-
- document.getElementById("result").innerText = res;
+ let bp=parseFloat(document.getElementById("bp").value);
+ let hp=parseFloat(document.getElementById("hp").value);
+ let res="";
+ if(bp<3 && hp<10) res="🔴 Manque de fluide";
+ else if(bp<3 && hp>=12) res="❄️ Problème évaporateur";
+ else if(bp>=4 && hp<10) res="🔥 Problème condensation";
+ else if(bp>6 && hp<12) res="⚠️ Compresseur fatigué";
+ document.getElementById("result").innerText=res;
 }
 
+// RAPPORT
 function generate(){
-
- let client = document.getElementById("client").value;
- let adresse = document.getElementById("adresse").value;
- let bp = document.getElementById("bp").value;
- let hp = document.getElementById("hp").value;
- let amp = document.getElementById("amp").value;
- let amb = document.getElementById("amb").value;
- let souff = document.getElementById("souf").value;
- let diag = document.getElementById("result").innerText;
-
- let date = new Date().toLocaleString();
-
- let txt = "";
-
- txt += "===== RAPPORT D'INTERVENTION =====\n\n";
- txt += "Entreprise : Air Sud Éco-Confort\n\n";
- txt += "Date : " + date + "\n\n";
- txt += "Client : " + client + "\n";
- txt += "Adresse : " + adresse + "\n\n";
-
- txt += "BP : " + bp + " bar\n";
- txt += "HP : " + hp + " bar\n";
- txt += "Intensité : " + amp + " A\n";
- txt += "Température ambiante : " + amb + " °C\n";
- txt += "Température soufflage : " + souff + " °C\n\n";
-
- txt += "DIAGNOSTIC :\n" + diag + "\n\n";
-
- txt += "Conclusion : Etat de l'installation antérieur à l'intervention.\n";
- txt += "Aucune responsabilité engagée.\n\n";
-
- txt += "Signature technicien : __________\n";
- txt += "Signature client : __________\n";
-
- document.getElementById("rapport").value = txt;
+ let txt="===== RAPPORT =====\n\n";
+ txt+="Client : "+document.getElementById("client").value+"\n";
+ txt+="Diagnostic : "+document.getElementById("result").innerText+"\n";
+ txt+="Conclusion : état antérieur.\n";
+ document.getElementById("rapport").value=txt;
 }
 
+// PDF
 function printRapport(){
-  let contenu = document.getElementById("rapport").value;
-  let fenetre = window.open("", "", "width=600,height=600");
-  fenetre.document.write("<pre>" + contenu + "</pre>");
-  fenetre.document.close();
-  fenetre.print();
+ let contenu=document.getElementById("rapport").value;
+ let win=window.open();
+ win.document.write("<pre>"+contenu+"</pre>");
+ win.print();
+}
+
+// WHATSAPP
+function sendWhatsApp(){
+ let texte=document.getElementById("rapport").value;
+ window.open("https://wa.me/?text="+encodeURIComponent(texte));
 }
 
 </script>
