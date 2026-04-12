@@ -3,118 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <title>Air Sud Éco-Confort</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body {font-family:Arial;background:#f5f5f5;padding:10px;}
-.card {background:white;padding:15px;margin-bottom:15px;border-radius:10px;}
-input, textarea {width:100%;padding:8px;margin:5px 0;}
-button {width:100%;padding:12px;background:orange;color:white;border:none;margin-top:5px;}
-canvas {border:1px solid black;width:100%;height:150px;touch-action:none;}
+body{font-family:Arial;background:#f5f5f5;padding:10px;}
+h2{font-size:22px}
+input,textarea{width:100%;padding:12px;margin:5px 0;font-size:16px}
+button{width:100%;padding:15px;margin-top:10px;background:orange;color:white;border:none;font-size:18px}
+.carte{background:white;padding:15px;margin-bottom:15px;border-radius:10px}
+label{font-size:16px}
 </style>
 </head>
 
 <body>
 
 <h2>Air Sud Éco-Confort</h2>
+<p>Un partenaire de confiance</p>
 
-<div class="card">
-<input id="client" placeholder="Nom client">
+<div class="carte">
+<h3>Diagnostic</h3>
+
+<input id="bp" placeholder="BP (bar)">
+<input id="hp" placeholder="HP (bar)">
+<input id="amp" placeholder="Intensité (A)">
+<input id="temp" placeholder="Température (°C)">
+
+<button onclick="diagnostic()">Analyser</button>
+<p id="result"></p>
+</div>
+
+<div class="carte">
+<h3>Client</h3>
+<input id="client" placeholder="Nom">
 <input id="adresse" placeholder="Adresse">
 </div>
 
-<div class="card">
-<input id="bp" placeholder="BP">
-<input id="hp" placeholder="HP">
-<button onclick="diagnostic()">Diagnostic</button>
-<pre id="result"></pre>
-</div>
+<div class="carte">
+<h3>Devis</h3>
 
-<div class="card">
-<label><input type="checkbox" class="p" value="90"> Recherche fuite</label><br>
-<label><input type="checkbox" class="p" value="150"> Diagnostic électrique</label><br>
+<label><input type="checkbox" value="110"> Entretien monosplit (110€)</label><br>
+<label><input type="checkbox" value="90"> Recherche fuite (90€)</label><br>
+<label><input type="checkbox" value="60"> Main d'oeuvre recharge (60€)</label><br>
+<label><input type="checkbox" value="110"> Traitement anticorrosion (110€)</label><br>
+<label><input type="checkbox" value="150"> Diagnostic électrique (150€)</label><br>
+<label><input type="checkbox" value="60"> Condensateur (60€)</label><br>
+<label><input type="checkbox" value="20"> Fusible (20€)</label><br>
+<label><input type="checkbox" value="15"> Connectique (15€)</label><br>
+<label><input type="checkbox" value="40"> Schrader (40€)</label><br>
+<label><input type="checkbox" value="80"> Brasure (80€)</label><br>
 
 <input id="fluide" placeholder="Fluide €">
-<button onclick="calc()">Total</button>
-Total : <span id="total">0</span> €
+
+<button onclick="calculTotal()">Calculer total</button>
+<p id="total"></p>
+
 </div>
 
-<div class="card">
-Signature client :
-<canvas id="sign"></canvas>
-<button onclick="clearSign()">Effacer</button>
+<div class="carte" id="document">
+<h3>Document</h3>
+<pre id="doc"></pre>
+
+<h4>Signature client</h4>
+<canvas id="sign1" width="300" height="100" style="border:1px solid black"></canvas>
+
+<h4>Signature technicien</h4>
+<canvas id="sign2" width="300" height="100" style="border:1px solid black"></canvas>
+
+<button onclick="clearSign()">Effacer signatures</button>
+
 </div>
 
-<div class="card">
-<button onclick="generate()">Générer rapport</button>
+<button onclick="generate()">Générer document</button>
 <button onclick="pdf()">PDF</button>
-<textarea id="rapport"></textarea>
-</div>
+<button onclick="whatsapp()">WhatsApp</button>
 
 <script>
 
 function diagnostic(){
-let bp=parseFloat(document.getElementById("bp").value);
-let hp=parseFloat(document.getElementById("hp").value);
+let bp=parseFloat(bpInput());
+let hp=parseFloat(hpInput());
+let amp=parseFloat(val("amp"));
+let res="OK";
 
-let txt="";
-if(bp<3 && hp<10) txt="Manque de fluide";
-if(bp>6 && hp<12) txt="Compresseur HS probable";
+if(bp<3 && hp<10) res="Manque de fluide";
+else if(bp<3 && hp>=12) res="KVP";
+else if(bp>=4 && hp<10) res="KVR";
+else if(bp>6 && hp<12) res="Compresseur fatigué";
 
-document.getElementById("result").innerText=txt;
+if(amp>10) res+=" + Surconsommation";
+
+document.getElementById("result").innerText=res;
 }
 
-function calc(){
-let t=0;
-document.querySelectorAll(".p").forEach(c=>{if(c.checked)t+=+c.value});
-t+=+document.getElementById("fluide").value||0;
-document.getElementById("total").innerText=t;
+function val(id){return document.getElementById(id).value}
+function bpInput(){return val("bp")}
+function hpInput(){return val("hp")}
+
+function calculTotal(){
+let total=0;
+document.querySelectorAll("input[type=checkbox]:checked").forEach(e=>{
+total+=parseFloat(e.value)
+})
+let fluide=parseFloat(val("fluide"))||0;
+total+=fluide;
+document.getElementById("total").innerText="Total : "+total+" €";
 }
 
 function generate(){
-rapport.value=
-"Client:"+client.value+"\n"+
-"Adresse:"+adresse.value+"\n\n"+
-"Diagnostic:\n"+result.innerText+
-"\nTotal:"+total.innerText+"€";
+let txt="";
+txt+="Entreprise: Air Sud Éco-Confort\n";
+txt+="Client: "+val("client")+"\n";
+txt+="Adresse: "+val("adresse")+"\n\n";
+txt+="Diagnostic: "+document.getElementById("result").innerText+"\n";
+txt+=document.getElementById("total").innerText+"\n";
+document.getElementById("doc").innerText=txt;
 }
 
-function pdf(){
+async function pdf(){
 const { jsPDF } = window.jspdf;
 let doc=new jsPDF();
-doc.text(rapport.value,10,10);
-
-// signature intégrée
+let canvas=await html2canvas(document.getElementById("document"));
 let img=canvas.toDataURL("image/png");
-doc.addImage(img,'PNG',10,60,100,40);
-
-doc.save("rapport.pdf");
+doc.addImage(img,'PNG',10,10,180,0);
+doc.save("devis.pdf");
 }
 
-// SIGNATURE TACTILE
-let canvas=document.getElementById("sign");
-let ctx=canvas.getContext("2d");
+function whatsapp(){
+let text=document.getElementById("doc").innerText;
+window.open("https://wa.me/?text="+encodeURIComponent(text));
+}
 
+// SIGNATURE
+function sign(canvasId){
+let canvas=document.getElementById(canvasId);
+let ctx=canvas.getContext("2d");
 let drawing=false;
 
-canvas.addEventListener("touchstart",e=>{
-drawing=true;
-let t=e.touches[0];
-ctx.moveTo(t.clientX,t.clientY);
-});
-
-canvas.addEventListener("touchmove",e=>{
-if(!drawing)return;
-let t=e.touches[0];
-ctx.lineTo(t.clientX,t.clientY);
+canvas.addEventListener("mousedown",()=>drawing=true);
+canvas.addEventListener("mouseup",()=>drawing=false);
+canvas.addEventListener("mousemove",e=>{
+if(!drawing) return;
+ctx.lineWidth=2;
+ctx.lineTo(e.offsetX,e.offsetY);
 ctx.stroke();
 });
+}
 
-canvas.addEventListener("touchend",()=>drawing=false);
+sign("sign1");
+sign("sign2");
 
 function clearSign(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
+document.getElementById("sign1").getContext("2d").clearRect(0,0,300,100);
+document.getElementById("sign2").getContext("2d").clearRect(0,0,300,100);
 }
 
 </script>
