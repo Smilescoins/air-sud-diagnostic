@@ -16,24 +16,25 @@ button { width:100%; padding:12px; margin-top:5px; border:none; border-radius:5p
 .btn-green { background:#22c55e; color:white; }
 label { display:block; margin-top:5px; }
 pre { white-space: pre-wrap; }
+canvas { background:white; border-radius:5px; }
+img { width:100%; margin-top:10px; border-radius:5px; }
 </style>
 </head>
 
 <body>
 
 <h2>Air Sud Éco-Confort</h2>
-<p>Diagnostic complet climatisation</p>
 
 <div class="card">
-<h3>Mesures</h3>
+<h3>Diagnostic</h3>
 
 <input id="bp" placeholder="BP (bar)">
 <input id="hp" placeholder="HP (bar)">
-<input id="amp" placeholder="Intensité (A)">
+<input id="amp" placeholder="Intensité">
 <input id="amb" placeholder="Température ambiante">
 <input id="souf" placeholder="Température soufflage">
 
-<button class="btn-orange" onclick="diagnostic()">Lancer diagnostic complet</button>
+<button class="btn-orange" onclick="diagnostic()">Lancer diagnostic</button>
 
 <pre id="result"></pre>
 </div>
@@ -43,8 +44,8 @@ pre { white-space: pre-wrap; }
 
 <label><input type="checkbox" id="condenseurSale"> Condenseur encrassé</label>
 <label><input type="checkbox" id="evaporateurSale"> Évaporateur encrassé</label>
-<label><input type="checkbox" id="ventilHS"> Ventilateur ne tourne pas</label>
-<label><input type="checkbox" id="givre"> Présence de givre</label>
+<label><input type="checkbox" id="ventilHS"> Ventilateur HS</label>
+<label><input type="checkbox" id="givre"> Givre</label>
 <label><input type="checkbox" id="bruit"> Bruit anormal</label>
 
 </div>
@@ -55,12 +56,21 @@ pre { white-space: pre-wrap; }
 <input id="client" placeholder="Nom client">
 <input id="adresse" placeholder="Adresse">
 
-<textarea id="rapport" rows="10"></textarea>
+<textarea id="rapport" rows="8"></textarea>
 
 <button class="btn-blue" onclick="generate()">📄 Générer rapport</button>
 <button class="btn-green" onclick="saveClient()">💾 Enregistrer</button>
 <button class="btn-orange" onclick="printRapport()">🖨️ PDF</button>
 <button class="btn-orange" onclick="sendWhatsApp()">📲 WhatsApp</button>
+
+<h3>📸 Photo</h3>
+<input type="file" accept="image/*" onchange="loadPhoto(event)">
+<img id="photoPreview">
+
+<h3>✍️ Signature</h3>
+<canvas id="signature" width="300" height="150"></canvas>
+<button onclick="clearSignature()">Effacer</button>
+
 </div>
 
 <div class="card">
@@ -75,44 +85,46 @@ let clients = JSON.parse(localStorage.getItem("clients") || "[]");
 
 function diagnostic(){
 
- let bp=parseFloat(bp.value);
- let hp=parseFloat(hp.value);
- let amp=parseFloat(amp.value);
- let amb=parseFloat(amb.value);
- let souff=parseFloat(souf.value);
+ let bpVal = parseFloat(document.getElementById("bp").value);
+ let hpVal = parseFloat(document.getElementById("hp").value);
+ let ampVal = parseFloat(document.getElementById("amp").value);
+ let ambVal = parseFloat(document.getElementById("amb").value);
+ let souffVal = parseFloat(document.getElementById("souf").value);
 
- let delta=amb-souf;
- let res="";
+ let delta = ambVal - souffVal;
+ let res = "";
 
- // FRIGO
- if(bp<3 && hp<10) res+="🔴 Manque de fluide\n";
- if(bp<3 && hp>=12) res+="❄️ Problème évaporateur\n";
- if(bp>=4 && hp<10) res+="🔥 Problème condensation\n";
- if(bp>6 && hp<12) res+="⚠️ Compresseur fatigué\n";
+ if(isNaN(bpVal) || isNaN(hpVal)){
+   res="⚠️ Renseigne BP et HP minimum";
+ } else {
 
- // ELECTRIQUE
- if(amp<2) res+="⚡ Pas d'alimentation ou compresseur HS\n";
- if(amp>8) res+="⚡ Intensité élevée → compresseur en contrainte\n";
+   if(bpVal<3 && hpVal<10) res+="🔴 Manque de fluide\n";
+   if(bpVal<3 && hpVal>=12) res+="❄️ Problème évaporateur\n";
+   if(bpVal>=4 && hpVal<10) res+="🔥 Problème condensation\n";
+   if(bpVal>6 && hpVal<12) res+="⚠️ Compresseur fatigué\n";
 
- // THERMIQUE
- if(delta<5) res+="🌡️ Mauvais rendement\n";
- if(delta>=8) res+="✅ Bon rendement\n";
+   if(!isNaN(ampVal)){
+     if(ampVal<2) res+="⚡ Pas d’alimentation\n";
+     if(ampVal>8) res+="⚡ Intensité élevée\n";
+   }
 
- // VISUEL
- if(condenseurSale.checked) res+="🧽 Condenseur sale\n";
- if(evaporateurSale.checked) res+="🧽 Évaporateur sale\n";
- if(ventilHS.checked) res+="🌀 Ventilateur HS\n";
- if(givre.checked) res+="❄️ Givre détecté\n";
- if(bruit.checked) res+="🔊 Bruit anormal\n";
+   if(!isNaN(delta)){
+     if(delta<5) res+="🌡️ Mauvais rendement\n";
+     if(delta>=8) res+="✅ Bon rendement\n";
+   }
 
- result.innerText=res;
+   if(document.getElementById("condenseurSale").checked) res+="🧽 Condenseur sale\n";
+   if(document.getElementById("evaporateurSale").checked) res+="🧽 Évaporateur sale\n";
+   if(document.getElementById("ventilHS").checked) res+="🌀 Ventilateur HS\n";
+   if(document.getElementById("givre").checked) res+="❄️ Givre\n";
+   if(document.getElementById("bruit").checked) res+="🔊 Bruit anormal\n";
+ }
+
+ document.getElementById("result").innerText = res;
 }
 
 function generate(){
- let txt="===== RAPPORT COMPLET =====\n\n";
- txt+="Client : "+client.value+"\n";
- txt+="Diagnostic :\n"+result.innerText+"\n";
- txt+="Conclusion : état avant intervention.\n";
+ let txt="Rapport\nClient : "+client.value+"\nDiagnostic :\n"+result.innerText;
  rapport.value=txt;
 }
 
@@ -121,7 +133,6 @@ function saveClient(){
  clients.push(entry);
  localStorage.setItem("clients",JSON.stringify(clients));
  displayHistory();
- alert("Enregistré");
 }
 
 function displayHistory(){
@@ -142,6 +153,28 @@ function searchClient(){
  li.innerText=c.client+" - "+c.date;
  history.appendChild(li);
  });
+}
+
+function loadPhoto(e){
+ document.getElementById("photoPreview").src = URL.createObjectURL(e.target.files[0]);
+}
+
+let canvas=document.getElementById("signature");
+let ctx=canvas.getContext("2d");
+let drawing=false;
+
+canvas.onmousedown=()=>drawing=true;
+canvas.onmouseup=()=>drawing=false;
+canvas.onmousemove=e=>{
+ if(!drawing) return;
+ ctx.lineTo(e.offsetX,e.offsetY);
+ ctx.stroke();
+ ctx.beginPath();
+ ctx.moveTo(e.offsetX,e.offsetY);
+};
+
+function clearSignature(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
 function printRapport(){
