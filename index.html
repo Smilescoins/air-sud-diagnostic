@@ -146,21 +146,9 @@ window.open("https://wa.me/?text="+encodeURIComponent(text));
 // SIGNATURE
 function sign(id){
 let canvas=document.getElementById(id);
-let ctx=canvas.getContext("2d");
-let drawing=false;
 
-canvas.addEventListener("mousedown",()=>drawing=true);
-canvas.addEventListener("mouseup",()=>drawing=false);
-canvas.addEventListener("mousemove",e=>{
-if(!drawing) return;
-ctx.lineWidth=2;
-ctx.lineTo(e.offsetX,e.offsetY);
-ctx.stroke();
-});
 }
 
-sign("sign1");
-sign("sign2");
 
 function clearSign(){
 document.getElementById("sign1").getContext("2d").clearRect(0,0,300,100);
