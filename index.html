@@ -2,99 +2,253 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Air Sud Éco-Confort V3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Air Sud Éco-Confort V4</title>
+
 <style>
-body{font-family:Arial;background:#0f172a;color:white;padding:20px}
-button{padding:10px;margin:5px;border:none;border-radius:8px;background:orange;color:white;cursor:pointer}
-.card{background:#1e293b;padding:15px;border-radius:10px;margin-bottom:10px}
+body {
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+}
+
+.topbar {
+  padding:15px;
+  text-align:center;
+  background:linear-gradient(90deg,#3b82f6,#f97316);
+}
+
+.nav {
+  display:flex;
+  gap:5px;
+  padding:10px;
+  background:#111827;
+}
+
+.nav button {
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#1e293b;
+  color:white;
+  font-weight:bold;
+}
+
+.section {
+  display:none;
+  padding:15px;
+}
+
+.active {
+  display:block;
+}
+
+.card {
+  background:#1e293b;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+button {
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#f97316;
+  color:white;
+  margin:5px;
+}
 </style>
+
 </head>
 
 <body>
 
-<h1>Air Sud Éco-Confort 🔧</h1>
+<div class="topbar">
+  <h2>Air Sud Éco-Confort</h2>
+</div>
 
-<div class="card">
-<h2>Mode USA Guidé</h2>
+<div class="nav">
+  <button onclick="showTab('home')">Accueil</button>
+  <button onclick="showTab('diag')">Diagnostic</button>
+  <button onclick="showTab('guided')">Mode USA</button>
+  <button onclick="showTab('doc')">Intervention</button>
+  <button onclick="showTab('history')">Historique</button>
+</div>
 
-<button onclick="startGuided('start_fail')">🔌 Pas de démarrage</button>
-<button onclick="startGuided('no_cold')">❄️ Pas de froid</button>
-<button onclick="startGuided('trip')">⚡ Disjoncte</button>
-<button onclick="startGuided('random')">🔄 Aléatoire</button>
+<!-- ACCUEIL -->
+<div id="home" class="section active">
+  <div class="card">
+    <h3>Accueil</h3>
+    <button onclick="showTab('diag')">🔧 Diagnostic expert</button>
+    <button onclick="showTab('guided')">🇺🇸 Mode guidé</button>
+    <button onclick="showTab('doc')">📋 Intervention</button>
+    <button onclick="showTab('history')">📂 Historique</button>
+  </div>
+</div>
 
-<div id="guided" style="margin-top:20px;"></div>
+<!-- DIAGNOSTIC -->
+<div id="diag" class="section">
+  <div class="card">
+    <h3>Diagnostic expert</h3>
+    <input id="bp" placeholder="BP">
+    <input id="hp" placeholder="HP">
+    <input id="amp" placeholder="Intensité">
+    <input id="amb" placeholder="T° ambiante">
+    <input id="souf" placeholder="T° soufflage">
+    <button onclick="diagnostic()">Analyser</button>
+    <pre id="result"></pre>
+  </div>
+</div>
+
+<!-- MODE USA -->
+<div id="guided" class="section">
+  <div class="card">
+    <h3>Mode guidé USA</h3>
+    <button onclick="startGuided('start_fail')">Pas de démarrage</button>
+    <button onclick="startGuided('no_cold')">Pas de froid</button>
+    <button onclick="startGuided('trip')">Disjoncte</button>
+    <button onclick="startGuided('random')">Aléatoire</button>
+    <div id="guidedBox"></div>
+  </div>
+</div>
+
+<!-- DOCUMENT -->
+<div id="doc" class="section">
+  <div class="card">
+    <h3>Intervention</h3>
+    <input id="client" placeholder="Nom client">
+    <textarea id="docText" placeholder="Document"></textarea>
+    <button onclick="generateDoc()">Générer</button>
+  </div>
+</div>
+
+<!-- HISTORIQUE -->
+<div id="history" class="section">
+  <div class="card">
+    <h3>Historique</h3>
+    <div id="historyList"></div>
+  </div>
 </div>
 
 <script>
 
-let guidedState = {step:0,scenario:null,data:{}};
+// NAVIGATION
+function showTab(id){
+ document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+}
+
+// =======================
+// DIAGNOSTIC SIMPLE
+// =======================
+function diagnostic(){
+ let bp = parseFloat(document.getElementById('bp').value);
+ let hp = parseFloat(document.getElementById('hp').value);
+ let amp = parseFloat(document.getElementById('amp').value);
+ let amb = parseFloat(document.getElementById('amb').value);
+ let souf = parseFloat(document.getElementById('souf').value);
+
+ if(isNaN(bp)||isNaN(hp)||isNaN(amp)||isNaN(amb)||isNaN(souf)){
+   document.getElementById("result").innerText="Remplis toutes les valeurs";
+   return;
+ }
+
+ let delta = amb - souf;
+ let diag="";
+
+ if(bp<3 && hp<10){
+   diag="Manque de fluide probable";
+ }
+ else if(bp<3 && hp>10){
+   diag="Restriction possible";
+ }
+ else if(hp>20){
+   diag="Problème condensation";
+ }
+ else{
+   diag="Analyse complémentaire nécessaire";
+ }
+
+ result.innerText = `ΔT = ${delta}\n${diag}`;
+}
+
+// =======================
+// MODE GUIDÉ USA
+// =======================
+let step=0;
+let scenario="";
 
 function startGuided(s){
- guidedState={step:1,scenario:s,data:{}};
- nextStep();
+ scenario=s;
+ step=1;
+ next();
 }
 
 function answer(v){
- guidedState.data["s"+guidedState.step]=v;
- guidedState.step++;
- nextStep();
+ window["s"+step]=v;
+ step++;
+ next();
 }
 
-function nextStep(){
+function next(){
 
- let s=guidedState.scenario;
- let st=guidedState.step;
  let out="";
 
- // CAS 1
- if(s==="start_fail"){
-  if(st===1) out="Machine démarre ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-  else if(st===2) out="Tension arrivée ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-  else if(st===3){
-    if(guidedState.data.s2==0) out="💥 Défaut alimentation";
-    else out="Carte réagit ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-  }
-  else if(st===4){
-    if(guidedState.data.s3==0) out="💥 Carte électronique HS";
-    else out="Compresseur tente ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-  }
-  else out="💥 Condensateur ou compresseur";
+ if(scenario==="start_fail"){
+   if(step===1){
+     out="Machine démarre ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
+   }
+   else if(step===2){
+     out="Tension ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
+   }
+   else{
+     out="💥 Défaut électrique ou condensateur";
+   }
  }
 
- // CAS 2
- if(s==="no_cold"){
-  if(st===1) out="Compresseur tourne ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-  else if(st===2){
-    if(guidedState.data.s1==0) out="💥 Panne électrique";
-    else out="Bon débit air ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-  }
-  else if(st===3){
-    if(guidedState.data.s2==0) out="💥 Ventilation UI";
-    else out="ΔT correct ?<br><button onclick='answer(0)'>FAIBLE</button><button onclick='answer(1)'>BON</button>";
-  }
-  else out="💥 Fluide ou restriction";
+ if(scenario==="no_cold"){
+   if(step===1){
+     out="Compresseur tourne ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
+   }
+   else{
+     out="💥 Fluide ou débit air";
+   }
  }
 
- // CAS 3
- if(s==="trip"){
-  if(st===1) out="Quand ?<br><button onclick='answer(1)'>Démarrage</button><button onclick='answer(2)'>Fonctionnement</button>";
-  else if(st===2){
-    if(guidedState.data.s1==1) out="Bzzz ?<br><button onclick='answer(0)'>NON</button><button onclick='answer(1)'>OUI</button>";
-    else out="💥 Intensité élevée / condensation";
-  }
-  else out="💥 Condensateur ou compresseur";
+ if(scenario==="trip"){
+   out="💥 Disjonction → vérifier compresseur / condensateur";
  }
 
- // CAS 4
- if(s==="random"){
-  if(st===1) out="Quand ?<br><button onclick='answer(1)'>Chaud</button><button onclick='answer(2)'>Froid</button>";
-  else if(st===2){
-    if(guidedState.data.s1==1) out="💥 Surchauffe / condensation";
-    else out="💥 Carte ou condensateur";
-  }
+ if(scenario==="random"){
+   out="💥 Défaut aléatoire → carte ou sonde";
  }
 
- document.getElementById("guided").innerHTML=out;
+ document.getElementById("guidedBox").innerHTML=out;
+}
+
+// =======================
+// DOCUMENT + HISTORIQUE
+// =======================
+let history=[];
+
+function generateDoc(){
+ let client=document.getElementById('client').value;
+ let text=`Intervention client : ${client}`;
+ document.getElementById('docText').value=text;
+
+ history.push(text);
+ renderHistory();
+}
+
+function renderHistory(){
+ let html="";
+ history.forEach(h=>{
+   html+=`<div>${h}</div>`;
+ });
+ document.getElementById('historyList').innerHTML=html;
 }
 
 </script>
