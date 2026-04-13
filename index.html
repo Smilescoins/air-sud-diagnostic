@@ -1,212 +1,1059 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Air Sud Éco-Confort</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Air Sud Éco-Confort</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<style>
-body{font-family:Arial;background:#f5f5f5;padding:10px;font-size:18px}
-input,textarea{width:100%;padding:12px;margin:5px 0;font-size:18px}
-button{width:100%;padding:15px;margin-top:10px;background:orange;color:white;border:none;font-size:18px}
-.carte{background:white;padding:15px;margin-bottom:15px;border-radius:10px}
-label{display:block;margin:5px 0}
-canvas{border:1px solid black;margin-top:10px}
-</style>
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --orange:#f97316;
+      --blue:#2563eb;
+      --green:#15803d;
+      --red:#b91c1c;
+      --border:#d1d5db;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Arial, Helvetica, sans-serif;
+      font-size:19px;
+      line-height:1.35;
+      padding:12px;
+    }
+
+    .wrap{
+      max-width:900px;
+      margin:0 auto;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:14px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    h1{
+      margin:0 0 4px 0;
+      font-size:28px;
+      text-align:center;
+    }
+
+    .sub{
+      margin:0;
+      text-align:center;
+      color:var(--muted);
+      font-size:17px;
+    }
+
+    h2{
+      margin:0 0 12px 0;
+      font-size:23px;
+    }
+
+    h3{
+      margin:12px 0 8px 0;
+      font-size:20px;
+    }
+
+    label{
+      display:block;
+      margin:10px 0;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="tel"],
+    textarea,
+    select{
+      width:100%;
+      padding:14px;
+      font-size:18px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+    }
+
+    input[type="checkbox"]{
+      width:22px;
+      height:22px;
+      vertical-align:middle;
+      margin-right:8px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .row-3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:10px;
+    }
+
+    @media (max-width:720px){
+      .row,.row-3{
+        grid-template-columns:1fr;
+      }
+    }
+
+    button{
+      width:100%;
+      border:none;
+      border-radius:12px;
+      padding:16px;
+      font-size:19px;
+      font-weight:700;
+      color:#fff;
+      background:var(--orange);
+      margin-top:10px;
+      cursor:pointer;
+    }
+
+    button.secondary{background:var(--blue)}
+    button.green{background:var(--green)}
+    button.red{background:var(--red)}
+
+    .small{
+      color:var(--muted);
+      font-size:16px;
+    }
+
+    .result{
+      white-space:pre-wrap;
+      background:#f9fafb;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:14px;
+      min-height:80px;
+    }
+
+    .total-box{
+      font-size:24px;
+      font-weight:700;
+      margin-top:10px;
+    }
+
+    .service-line{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      border-bottom:1px solid #eee;
+      padding:8px 0;
+    }
+
+    .service-left{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex:1;
+      min-width:250px;
+    }
+
+    .service-price{
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    canvas.signature{
+      width:100%;
+      height:180px;
+      border:2px solid #111;
+      border-radius:10px;
+      touch-action:none;
+      background:#fff;
+      display:block;
+    }
+
+    .photo-preview{
+      width:100%;
+      max-height:260px;
+      object-fit:contain;
+      border:1px solid var(--border);
+      border-radius:10px;
+      margin-top:8px;
+      background:#fff;
+    }
+
+    .history-item{
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:12px;
+      margin-bottom:10px;
+      background:#fff;
+    }
+
+    .history-title{
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .report-box{
+      white-space:pre-wrap;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:14px;
+      min-height:180px;
+    }
+
+    #pdfContent{
+      background:#fff;
+      color:#000;
+      padding:20px;
+      width:800px;
+    }
+
+    #pdfContent h2, #pdfContent h3{
+      margin-top:0;
+    }
+
+    .hidden{
+      position:absolute;
+      left:-99999px;
+      top:-99999px;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Air Sud Éco-Confort</h1>
+      <p class="sub">Un partenaire de confiance avant tout</p>
+    </div>
 
-<h2>Air Sud Éco-Confort</h2>
-<p>Entretien & maintenance climatisation</p>
+    <div class="card">
+      <h2>Client</h2>
+      <div class="row">
+        <input id="clientNom" type="text" placeholder="Nom / client" />
+        <input id="clientTel" type="tel" placeholder="Téléphone (optionnel)" />
+      </div>
+      <input id="clientAdresse" type="text" placeholder="Adresse" />
+      <div class="row">
+        <input id="machineMarque" type="text" placeholder="Marque (optionnel)" />
+        <input id="machineModele" type="text" placeholder="Modèle (optionnel)" />
+      </div>
+    </div>
 
-<div class="carte">
-<h3>Diagnostic</h3>
-<input id="bp" placeholder="BP (bar)">
-<input id="hp" placeholder="HP (bar)">
-<input id="amp" placeholder="Intensité (A)">
-<button onclick="diagnostic()">Analyser</button>
-<p id="result"></p>
-</div>
+    <div class="card">
+      <h2>Diagnostic</h2>
+      <div class="row-3">
+        <input id="bp" type="number" step="0.1" placeholder="BP (bar)" />
+        <input id="hp" type="number" step="0.1" placeholder="HP (bar)" />
+        <input id="amp" type="number" step="0.1" placeholder="Intensité (A)" />
+      </div>
+      <div class="row">
+        <input id="amb" type="number" step="0.1" placeholder="Température ambiante (°C)" />
+        <input id="souf" type="number" step="0.1" placeholder="Température soufflage (°C)" />
+      </div>
 
-<div class="carte">
-<h3>Client</h3>
-<input id="client" placeholder="Nom">
-<input id="adresse" placeholder="Adresse">
-</div>
+      <div class="row">
+        <select id="symptomeAir">
+          <option value="">Symptôme air / froid</option>
+          <option value="pas_froid">Ne fait plus de froid</option>
+          <option value="froid_faible">Froid faible</option>
+          <option value="souffle_normal">Soufflage normal</option>
+          <option value="givre">Givre / glace</option>
+        </select>
 
-<div class="carte">
-<h3>Prestations</h3>
+        <select id="symptomeElec">
+          <option value="">Symptôme électrique</option>
+          <option value="aucun">Aucun particulier</option>
+          <option value="disjoncte">Disjonction</option>
+          <option value="ventilateur">Ventilateur suspect</option>
+          <option value="condensateur">Condensateur suspect</option>
+          <option value="compresseur">Compresseur ne démarre pas bien</option>
+        </select>
+      </div>
 
-<label><input type="checkbox" value="110"> Entretien monosplit (110€)</label>
-<label><input type="checkbox" value="0" id="multi"> Multisplit (+50€/UI)</label>
-<input id="ui" placeholder="Nombre d'UI">
+      <button onclick="lancerDiagnostic()">Analyser le diagnostic</button>
 
-<label><input type="checkbox" value="90"> Recherche de fuite (90€)</label>
-<label><input type="checkbox" value="60"> Main d'œuvre recharge (60€)</label>
-<label><input type="checkbox" value="110"> Traitement anticorrosion (110€)</label>
-<label><input type="checkbox" value="150"> Diagnostic électrique (150€)</label>
-<label><input type="checkbox" value="60"> Condensateur (60€)</label>
-<label><input type="checkbox" value="20"> Fusible (20€)</label>
-<label><input type="checkbox" value="15"> Connectique (15€)</label>
-<label><input type="checkbox" value="40"> Schrader (40€)</label>
-<label><input type="checkbox" value="80"> Brasure (80€)</label>
+      <h3>Conclusion diagnostic</h3>
+      <div id="resultatDiagnostic" class="result"></div>
+    </div>
 
-<input id="fluide" placeholder="Fluide €">
+    <div class="card">
+      <h2>Devis / prestations</h2>
 
-<button onclick="calculTotal()">Calculer total</button>
-<p id="total"></p>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_entretien_mono" type="checkbox" class="service-check" data-type="fixed" data-price="110"> Entretien climatisation monosplit</label>
+        </div>
+        <div class="service-price">110 €</div>
+      </div>
 
-</div>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_multisplit" type="checkbox" class="service-check" data-type="multi"> Entretien climatisation multisplit</label>
+        </div>
+        <div class="row" style="flex:1; min-width:240px;">
+          <input id="multi_ui" type="number" min="2" step="1" placeholder="Nombre d’UI" />
+          <div class="service-price">110 € + 50 €/UI supp.</div>
+        </div>
+      </div>
 
-<div class="carte" id="doc">
-<h3>Document</h3>
-<pre id="text"></pre>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_fuite" type="checkbox" class="service-check" data-type="fixed" data-price="90"> Recherche de fuite</label>
+        </div>
+        <div class="service-price">90 €</div>
+      </div>
 
-<h4>Signature client</h4>
-<canvas id="sign1" width="300" height="100"></canvas>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_recharge_mo" type="checkbox" class="service-check" data-type="fixed" data-price="60"> Main-d’œuvre recharge fluide</label>
+        </div>
+        <div class="service-price">60 €</div>
+      </div>
 
-<h4>Signature technicien</h4>
-<canvas id="sign2" width="300" height="100"></canvas>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_recup_fluide" type="checkbox" class="service-check" data-type="custom-input" data-input="recup_fluide_prix"> Récupération de fluide</label>
+        </div>
+        <input id="recup_fluide_prix" type="number" step="0.01" placeholder="Prix récupération fluide (€)" />
+      </div>
 
-<button onclick="clearSign()">Effacer signatures</button>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_anticorrosion" type="checkbox" class="service-check" data-type="fixed" data-price="110"> Traitement anticorrosion</label>
+        </div>
+        <div class="service-price">110 €</div>
+      </div>
 
-</div>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_diag_elec" type="checkbox" class="service-check" data-type="fixed" data-price="150"> Diagnostic / dépannage électrique</label>
+        </div>
+        <div class="service-price">150 €</div>
+      </div>
 
-<button onclick="generate()">Générer document</button>
-<button onclick="pdf()">PDF</button>
-<button onclick="whatsapp()">WhatsApp</button>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_condensateur" type="checkbox" class="service-check" data-type="fixed" data-price="60"> Condensateur posé</label>
+        </div>
+        <div class="service-price">60 €</div>
+      </div>
 
-<script>
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_fusible" type="checkbox" class="service-check" data-type="fixed" data-price="20"> Fusible posé</label>
+        </div>
+        <div class="service-price">20 €</div>
+      </div>
 
-function val(id){return document.getElementById(id).value}
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_connectique" type="checkbox" class="service-check" data-type="fixed" data-price="15"> Connectique / cosses</label>
+        </div>
+        <div class="service-price">15 €</div>
+      </div>
 
-function diagnostic(){
-let bp=parseFloat(val("bp"));
-let hp=parseFloat(val("hp"));
-let amp=parseFloat(val("amp"));
-let res="OK";
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_schrader" type="checkbox" class="service-check" data-type="fixed" data-price="40"> Remplacement Schrader</label>
+        </div>
+        <div class="service-price">40 €</div>
+      </div>
 
-if(bp<3 && hp<10) res="Manque de fluide";
-else if(bp<3 && hp>=12) res="KVP";
-else if(bp>=4 && hp<10) res="KVR";
-else if(bp>6 && hp<12) res="Compresseur fatigué";
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_brasure" type="checkbox" class="service-check" data-type="fixed" data-price="80"> Brasure simple</label>
+        </div>
+        <div class="service-price">80 €</div>
+      </div>
 
-if(amp>10) res+=" + Surconsommation";
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_fluide" type="checkbox" class="service-check" data-type="custom-input" data-input="fluide_prix"> Fluide frigorigène</label>
+        </div>
+        <input id="fluide_prix" type="number" step="0.01" placeholder="Montant fluide (€)" />
+      </div>
 
-document.getElementById("result").innerText=res;
-}
+      <div class="service-line">
+        <div class="service-left">
+          <label><input id="srv_autre" type="checkbox" class="service-check" data-type="custom-line"> Autre ligne libre</label>
+        </div>
+        <div class="row" style="flex:1; min-width:240px;">
+          <input id="autre_libelle" type="text" placeholder="Libellé autre prestation" />
+          <input id="autre_prix" type="number" step="0.01" placeholder="Prix (€)" />
+        </div>
+      </div>
 
-function calculTotal(){
-let total=0;
+      <button onclick="calculerTotal()">Calculer le total</button>
+      <div id="totalAffiche" class="total-box">Total : 0 €</div>
+    </div>
 
-document.querySelectorAll("input[type=checkbox]:checked").forEach(e=>{
-total+=parseFloat(e.value)
-})
+    <div class="card">
+      <h2>Photo intervention</h2>
+      <input id="photoInput" type="file" accept="image/*" capture="environment" />
+      <p class="small">1 photo maximum</p>
+      <img id="photoPreview" class="photo-preview" style="display:none;" alt="Photo intervention" />
+    </div>
 
-if(document.getElementById("multi").checked){
-let ui=parseInt(val("ui"))||0;
-total+=ui*50;
-}
+    <div class="card">
+      <h2>Signatures</h2>
+      <h3>Signature client</h3>
+      <canvas id="signatureClient" class="signature"></canvas>
+      <button type="button" class="red" onclick="effacerSignature('signatureClient')">Effacer signature client</button>
 
-let fluide=parseFloat(val("fluide"))||0;
-total+=fluide;
+      <h3>Signature technicien</h3>
+      <canvas id="signatureTech" class="signature"></canvas>
+      <button type="button" class="red" onclick="effacerSignature('signatureTech')">Effacer signature technicien</button>
+    </div>
 
-document.getElementById("total").innerText="Total : "+total+" €";
-}
+    <div class="card">
+      <h2>Document</h2>
+      <button onclick="genererDocument()">Générer le document</button>
+      <button class="secondary" onclick="envoyerWhatsApp()">Envoyer le devis par WhatsApp</button>
+      <button class="green" onclick="telechargerPDF()">Télécharger le PDF</button>
+      <button onclick="enregistrerClient()">Enregistrer dans l’historique</button>
 
-function generate(){
-let txt="";
-txt+="Air Sud Éco-Confort\n";
-txt+="Client: "+val("client")+"\n";
-txt+="Adresse: "+val("adresse")+"\n\n";
-txt+="Diagnostic: "+document.getElementById("result").innerText+"\n";
-txt+=document.getElementById("total").innerText+"\n";
+      <h3>Prévisualisation</h3>
+      <div id="apercuDocument" class="report-box"></div>
+    </div>
 
-document.getElementById("text").innerText=txt;
-}
+    <div class="card">
+      <h2>Historique / répertoire client</h2>
+      <input id="rechercheHistorique" type="text" placeholder="Rechercher client, adresse, diagnostic..." oninput="afficherHistorique()" />
+      <div id="historiqueListe"></div>
+    </div>
+  </div>
 
-async function pdf(){
-const { jsPDF } = window.jspdf;
-let doc=new jsPDF();
-let canvas=await html2canvas(document.getElementById("doc"));
-let img=canvas.toDataURL("image/png");
-doc.addImage(img,'PNG',10,10,180,0);
-doc.save("devis.pdf");
-}
+  <!-- Zone cachée utilisée pour le PDF -->
+  <div class="hidden">
+    <div id="pdfContent"></div>
+  </div>
 
-function whatsapp(){
-let text=document.getElementById("text").innerText;
-window.open("https://wa.me/?text="+encodeURIComponent(text));
-}
+  <script>
+    const STORAGE_KEY = "air_sud_eco_confort_historique_v1";
+    let photoDataUrl = "";
 
-// SIGNATURE
-function sign(id){
-let canvas=document.getElementById(id);
+    function val(id){
+      return document.getElementById(id).value;
+    }
 
-}
+    function txt(id){
+      return document.getElementById(id).innerText;
+    }
 
+    function setTxt(id, value){
+      document.getElementById(id).innerText = value;
+    }
 
-function clearSign(){
-document.getElementById("sign1").getContext("2d").clearRect(0,0,300,100);
-document.getElementById("sign2").getContext("2d").clearRect(0,0,300,100);
-}
-function initSignature(canvasId){
-let canvas = document.getElementById(canvasId);
-let ctx = canvas.getContext("2d");
-let drawing = false;
+    function euros(n){
+      return (Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2).replace(".", ",") + " €";
+    }
 
-function position(e){
-let rect = canvas.getBoundingClientRect();
-if(e.touches){
-return {
-x: e.touches[0].clientX - rect.left,
-y: e.touches[0].clientY - rect.top
-};
-}
-return {
-x: e.clientX - rect.left,
-y: e.clientY - rect.top
-};
-}
+    function getDeltaT(){
+      const amb = parseFloat(val("amb"));
+      const souf = parseFloat(val("souf"));
+      if(isNaN(amb) || isNaN(souf)) return null;
+      return amb - souf;
+    }
 
-function start(e){
-drawing = true;
-let pos = position(e);
-ctx.beginPath();
-ctx.moveTo(pos.x, pos.y);
-}
+    function resetAutoChecks(){
+      // On ne décoche pas tout à l’aveugle, on enlève seulement les coches auto
+      document.getElementById("srv_fuite").dataset.auto = "0";
+      document.getElementById("srv_diag_elec").dataset.auto = "0";
+    }
 
-function move(e){
-if(!drawing) return;
-e.preventDefault();
-let pos = position(e);
-ctx.lineTo(pos.x, pos.y);
-ctx.stroke();
-}
+    function cocherAuto(id){
+      const el = document.getElementById(id);
+      el.checked = true;
+      el.dataset.auto = "1";
+    }
 
-function end(){
-drawing = false;
-}
+    function lancerDiagnostic(){
+      resetAutoChecks();
 
-canvas.addEventListener("mousedown", start);
-canvas.addEventListener("mousemove", move);
-canvas.addEventListener("mouseup", end);
+      const bp = parseFloat(val("bp"));
+      const hp = parseFloat(val("hp"));
+      const amp = parseFloat(val("amp"));
+      const delta = getDeltaT();
+      const symptomeAir = val("symptomeAir");
+      const symptomeElec = val("symptomeElec");
 
-canvas.addEventListener("touchstart", start);
-canvas.addEventListener("touchmove", move);
-canvas.addEventListener("touchend", end);
-}
+      let lignes = [];
+      let resume = [];
+      let actions = [];
 
-// activation
-window.onload = function(){
-initSignature("sign1");
-initSignature("sign2");
-}
-</script>
+      if(isNaN(bp) || isNaN(hp)){
+        setTxt("resultatDiagnostic", "Renseigne au minimum BP et HP.");
+        return;
+      }
 
+      // Diagnostic fluide
+      if(bp < 3 && hp < 10){
+        resume.push("Manque de fluide probable.");
+        lignes.push("• Pressions basses : suspicion manque de fluide.");
+        actions.push("• Vérifier l’étanchéité avant toute recharge.");
+        actions.push("• Recherche de fuite conseillée.");
+        cocherAuto("srv_fuite");
+      }
+
+      if(bp < 3 && hp >= 12){
+        resume.push("Problème évaporateur / KVP / détendeur possible.");
+        lignes.push("• BP trop basse avec HP non effondrée : suspicion côté évaporation.");
+        actions.push("• Contrôler détendeur, débit d’air, évaporateur, filtre.");
+      }
+
+      if(bp >= 4 && bp <= 6 && hp < 10){
+        resume.push("Problème de condensation / KVR possible.");
+        lignes.push("• HP trop basse avec BP correcte : suspicion côté condensation.");
+        actions.push("• Contrôler ventilateur extérieur et échangeur.");
+      }
+
+      if(bp > 6 && hp < 12){
+        resume.push("Compresseur fatigué / compression faible possible.");
+        lignes.push("• BP haute + HP basse : compression faible.");
+        actions.push("• Le défaut peut être antérieur à l’intervention.");
+      }
+
+      if(hp > 20){
+        resume.push("Condenseur encrassé / ventilation extérieure insuffisante.");
+        lignes.push("• HP élevée : échange condenseur à contrôler.");
+        actions.push("• Nettoyage et contrôle ventilation recommandés.");
+      }
+
+      // Diagnostic électrique
+      if(!isNaN(amp)){
+        if(amp > 8){
+          resume.push("Contrôle électrique conseillé.");
+          lignes.push("• Intensité élevée : compresseur ou circuit sous contrainte.");
+          actions.push("• Contrôle électrique recommandé.");
+          cocherAuto("srv_diag_elec");
+        } else if(amp < 3){
+          lignes.push("• Intensité faible : compresseur peu chargé ou défaut de charge.");
+        }
+      }
+
+      if(symptomeElec === "disjoncte"){
+        resume.push("Suspicion défaut électrique.");
+        lignes.push("• Disjonction signalée.");
+        actions.push("• Contrôle électrique recommandé.");
+        cocherAuto("srv_diag_elec");
+      }
+
+      if(symptomeElec === "condensateur"){
+        resume.push("Condensateur suspect.");
+        lignes.push("• Symptôme déclaré : condensateur.");
+      }
+
+      if(symptomeElec === "ventilateur"){
+        resume.push("Ventilateur à contrôler.");
+        lignes.push("• Symptôme déclaré : ventilateur.");
+      }
+
+      // Croisement avec température
+      if(delta !== null){
+        lignes.push("• Delta T mesuré : " + delta.toFixed(1) + " °C.");
+        if(delta < 5){
+          resume.push("Mauvais rendement thermique.");
+          actions.push("• Le rendement constaté est insuffisant.");
+        } else if(delta >= 8){
+          lignes.push("• Rendement thermique cohérent.");
+        }
+      }
+
+      if(symptomeAir === "givre"){
+        resume.push("Présence de givre : évaporateur / débit d’air / KVP à contrôler.");
+      }
+
+      if(symptomeAir === "pas_froid"){
+        resume.push("Absence de froid constatée.");
+      }
+
+      if(symptomeAir === "froid_faible"){
+        resume.push("Froid faible constaté.");
+      }
+
+      if(resume.length === 0){
+        resume.push("Diagnostic à approfondir.");
+      }
+
+      let texte =
+        "Synthèse :\n" +
+        resume.map(x => "• " + x).join("\n") +
+        "\n\nDétails :\n" +
+        lignes.join("\n") +
+        "\n\nActions recommandées :\n" +
+        (actions.length ? actions.join("\n") : "• Poursuivre les contrôles.");
+
+      setTxt("resultatDiagnostic", texte);
+      calculerTotal();
+    }
+
+    function getSelectedPrestations(){
+      const lignes = [];
+      let total = 0;
+
+      document.querySelectorAll(".service-check").forEach(chk => {
+        if(!chk.checked) return;
+
+        const line = { libelle:"", montant:0 };
+        const id = chk.id;
+        const label = chk.parentElement.innerText.trim();
+
+        if(chk.dataset.type === "fixed"){
+          line.libelle = label;
+          line.montant = parseFloat(chk.dataset.price || "0");
+        }
+
+        if(chk.dataset.type === "multi"){
+          const ui = parseInt(val("multi_ui")) || 0;
+          let montant = 0;
+          if(ui >= 2){
+            montant = 110 + ((ui - 1) * 50);
+          } else {
+            montant = 110;
+          }
+          line.libelle = "Entretien climatisation multisplit" + (ui ? " (" + ui + " UI)" : "");
+          line.montant = montant;
+        }
+
+        if(chk.dataset.type === "custom-input"){
+          const inputId = chk.dataset.input;
+          const montant = parseFloat(val(inputId)) || 0;
+          line.libelle = label;
+          line.montant = montant;
+        }
+
+        if(chk.dataset.type === "custom-line"){
+          const libelle = val("autre_libelle").trim() || "Autre prestation";
+          const montant = parseFloat(val("autre_prix")) || 0;
+          line.libelle = libelle;
+          line.montant = montant;
+        }
+
+        lignes.push(line);
+        total += line.montant;
+      });
+
+      return { lignes, total };
+    }
+
+    function calculerTotal(){
+      const { total } = getSelectedPrestations();
+      document.getElementById("totalAffiche").innerText = "Total : " + euros(total);
+    }
+
+    function buildDocumentData(){
+      const date = new Date().toLocaleString();
+      const diagnostic = txt("resultatDiagnostic").trim() || "Non renseigné";
+      const { lignes, total } = getSelectedPrestations();
+
+      return {
+        date,
+        clientNom: val("clientNom").trim(),
+        clientTel: val("clientTel").trim(),
+        clientAdresse: val("clientAdresse").trim(),
+        machineMarque: val("machineMarque").trim(),
+        machineModele: val("machineModele").trim(),
+        bp: val("bp"),
+        hp: val("hp"),
+        amp: val("amp"),
+        amb: val("amb"),
+        souf: val("souf"),
+        symptomeAir: val("symptomeAir"),
+        symptomeElec: val("symptomeElec"),
+        diagnostic,
+        prestations: lignes,
+        total,
+        totalTexte: euros(total)
+      };
+    }
+
+    function genererDocument(){
+      const d = buildDocumentData();
+
+      let texte = "";
+      texte += "BON D’ACCEPTATION / DEVIS / INTERVENTION\n\n";
+      texte += "Entreprise : Air Sud Éco-Confort\n";
+      texte += "Slogan : Un partenaire de confiance avant tout\n";
+      texte += "Date : " + d.date + "\n\n";
+
+      texte += "CLIENT\n";
+      texte += "Nom : " + (d.clientNom || "-") + "\n";
+      texte += "Téléphone : " + (d.clientTel || "-") + "\n";
+      texte += "Adresse : " + (d.clientAdresse || "-") + "\n\n";
+
+      texte += "MACHINE\n";
+      texte += "Marque : " + (d.machineMarque || "-") + "\n";
+      texte += "Modèle : " + (d.machineModele || "-") + "\n\n";
+
+      texte += "MESURES\n";
+      texte += "BP : " + (d.bp || "-") + " bar\n";
+      texte += "HP : " + (d.hp || "-") + " bar\n";
+      texte += "Intensité : " + (d.amp || "-") + " A\n";
+      texte += "Température ambiante : " + (d.amb || "-") + " °C\n";
+      texte += "Température soufflage : " + (d.souf || "-") + " °C\n\n";
+
+      texte += "DIAGNOSTIC\n";
+      texte += d.diagnostic + "\n\n";
+
+      texte += "DEVIS / PRESTATIONS\n";
+      if(d.prestations.length){
+        d.prestations.forEach(p => {
+          texte += "- " + p.libelle + " : " + euros(p.montant) + "\n";
+        });
+      } else {
+        texte += "- Aucune ligne cochée\n";
+      }
+
+      texte += "\nTOTAL : " + d.totalTexte + "\n\n";
+      texte += "Le client accepte les travaux cochés / indiqués ci-dessus.\n";
+      texte += "Paiement à la fin des travaux.\n";
+
+      document.getElementById("apercuDocument").innerText = texte;
+    }
+
+    function getSignatureDataURL(canvasId){
+      const canvas = document.getElementById(canvasId);
+      return canvas.toDataURL("image/png");
+    }
+
+    function hasSignature(canvasId){
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      const pixels = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      for(let i=0;i<pixels.length;i+=4){
+        if(!(pixels[i] === 0 && pixels[i+1] === 0 && pixels[i+2] === 0 && pixels[i+3] === 0)){
+          return true;
+        }
+      }
+      return false;
+    }
+
+    async function telechargerPDF(){
+      genererDocument();
+
+      const d = buildDocumentData();
+      const pdfZone = document.getElementById("pdfContent");
+
+      let prestationsHtml = "";
+      if(d.prestations.length){
+        prestationsHtml = d.prestations.map(p => `<div>• ${escapeHtml(p.libelle)} : ${escapeHtml(euros(p.montant))}</div>`).join("");
+      } else {
+        prestationsHtml = "<div>• Aucune ligne cochée</div>";
+      }
+
+      const photoHtml = photoDataUrl
+        ? `<h3>Photo intervention</h3><img src="${photoDataUrl}" style="max-width:700px; max-height:300px; object-fit:contain; border:1px solid #ccc;">`
+        : "";
+
+      const signClientHtml = hasSignature("signatureClient")
+        ? `<img src="${getSignatureDataURL("signatureClient")}" style="width:320px; height:120px; border:1px solid #000;">`
+        : "<div style='width:320px;height:120px;border:1px solid #000;'></div>";
+
+      const signTechHtml = hasSignature("signatureTech")
+        ? `<img src="${getSignatureDataURL("signatureTech")}" style="width:320px; height:120px; border:1px solid #000;">`
+        : "<div style='width:320px;height:120px;border:1px solid #000;'></div>";
+
+      pdfZone.innerHTML = `
+        <div style="font-family:Arial,sans-serif; font-size:16px; line-height:1.35;">
+          <h2>Air Sud Éco-Confort</h2>
+          <div>Un partenaire de confiance avant tout</div>
+          <h3>Bon d’acceptation / Devis / Intervention</h3>
+          <div><strong>Date :</strong> ${escapeHtml(d.date)}</div>
+
+          <h3>Client</h3>
+          <div><strong>Nom :</strong> ${escapeHtml(d.clientNom || "-")}</div>
+          <div><strong>Téléphone :</strong> ${escapeHtml(d.clientTel || "-")}</div>
+          <div><strong>Adresse :</strong> ${escapeHtml(d.clientAdresse || "-")}</div>
+
+          <h3>Machine</h3>
+          <div><strong>Marque :</strong> ${escapeHtml(d.machineMarque || "-")}</div>
+          <div><strong>Modèle :</strong> ${escapeHtml(d.machineModele || "-")}</div>
+
+          <h3>Mesures</h3>
+          <div><strong>BP :</strong> ${escapeHtml(d.bp || "-")} bar</div>
+          <div><strong>HP :</strong> ${escapeHtml(d.hp || "-")} bar</div>
+          <div><strong>Intensité :</strong> ${escapeHtml(d.amp || "-")} A</div>
+          <div><strong>Température ambiante :</strong> ${escapeHtml(d.amb || "-")} °C</div>
+          <div><strong>Température soufflage :</strong> ${escapeHtml(d.souf || "-")} °C</div>
+
+          <h3>Diagnostic</h3>
+          <div style="white-space:pre-wrap; border:1px solid #ccc; padding:10px;">${escapeHtml(d.diagnostic)}</div>
+
+          <h3>Prestations</h3>
+          ${prestationsHtml}
+
+          <h3>Total</h3>
+          <div><strong>${escapeHtml(d.totalTexte)}</strong></div>
+
+          ${photoHtml}
+
+          <h3>Signatures</h3>
+          <div style="display:flex; gap:30px; align-items:flex-start;">
+            <div>
+              <div><strong>Client</strong></div>
+              ${signClientHtml}
+            </div>
+            <div>
+              <div><strong>Technicien</strong></div>
+              ${signTechHtml}
+            </div>
+          </div>
+        </div>
+      `;
+
+      const canvas = await html2canvas(pdfZone, { scale: 2, backgroundColor: "#ffffff" });
+      const imgData = canvas.toDataURL("image/png");
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = 190;
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      let position = 10;
+      let heightLeft = pdfHeight;
+
+      pdf.addImage(imgData, "PNG", 10, position, pdfWidth, pdfHeight);
+      heightLeft -= 277;
+
+      while (heightLeft > 0) {
+        position = heightLeft - pdfHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 10, position, pdfWidth, pdfHeight);
+        heightLeft -= 277;
+      }
+
+      const nom = (d.clientNom || "client").replace(/[^\w\-]+/g, "_");
+      pdf.save("devis_" + nom + ".pdf");
+    }
+
+    function envoyerWhatsApp(){
+      genererDocument();
+      const texte = txt("apercuDocument");
+      const message = "Devis Air Sud Éco-Confort\n\n" + texte;
+      window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank");
+    }
+
+    function resizeImage(file, maxWidth = 900, quality = 0.75){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e){
+          const img = new Image();
+          img.onload = function(){
+            const ratio = img.width / img.height;
+            const width = Math.min(maxWidth, img.width);
+            const height = width / ratio;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById("photoInput").addEventListener("change", async function(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      try{
+        photoDataUrl = await resizeImage(file);
+        const preview = document.getElementById("photoPreview");
+        preview.src = photoDataUrl;
+        preview.style.display = "block";
+      }catch(err){
+        alert("Impossible de charger la photo.");
+      }
+    });
+
+    function enregistrerClient(){
+      genererDocument();
+      const d = buildDocumentData();
+
+      const historique = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+      historique.unshift({
+        id: Date.now(),
+        date: d.date,
+        clientNom: d.clientNom,
+        clientTel: d.clientTel,
+        clientAdresse: d.clientAdresse,
+        diagnostic: d.diagnostic,
+        totalTexte: d.totalTexte,
+        apercu: txt("apercuDocument"),
+        photoDataUrl: photoDataUrl || "",
+        prestations: d.prestations
+      });
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historique));
+      afficherHistorique();
+      alert("Client enregistré dans l’historique.");
+    }
+
+    function afficherHistorique(){
+      const q = val("rechercheHistorique").trim().toLowerCase();
+      const historique = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const container = document.getElementById("historiqueListe");
+
+      let filtres = historique.filter(item => {
+        const blob = (
+          (item.clientNom || "") + " " +
+          (item.clientAdresse || "") + " " +
+          (item.diagnostic || "")
+        ).toLowerCase();
+        return blob.includes(q);
+      });
+
+      if(!filtres.length){
+        container.innerHTML = "<div class='small'>Aucun client enregistré.</div>";
+        return;
+      }
+
+      container.innerHTML = filtres.map(item => `
+        <div class="history-item">
+          <div class="history-title">${escapeHtml(item.clientNom || "Client non renseigné")}</div>
+          <div><strong>Date :</strong> ${escapeHtml(item.date || "-")}</div>
+          <div><strong>Adresse :</strong> ${escapeHtml(item.clientAdresse || "-")}</div>
+          <div><strong>Total :</strong> ${escapeHtml(item.totalTexte || "-")}</div>
+          <div class="small" style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(item.diagnostic || "")}</div>
+          <button onclick="chargerHistorique(${item.id})">Charger cette fiche</button>
+          <button class="red" onclick="supprimerHistorique(${item.id})">Supprimer</button>
+        </div>
+      `).join("");
+    }
+
+    function chargerHistorique(id){
+      const historique = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const item = historique.find(x => x.id === id);
+      if(!item) return;
+
+      document.getElementById("clientNom").value = item.clientNom || "";
+      document.getElementById("clientTel").value = item.clientTel || "";
+      document.getElementById("clientAdresse").value = item.clientAdresse || "";
+      document.getElementById("apercuDocument").innerText = item.apercu || "";
+      document.getElementById("resultatDiagnostic").innerText = item.diagnostic || "";
+      photoDataUrl = item.photoDataUrl || "";
+
+      const preview = document.getElementById("photoPreview");
+      if(photoDataUrl){
+        preview.src = photoDataUrl;
+        preview.style.display = "block";
+      } else {
+        preview.src = "";
+        preview.style.display = "none";
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function supprimerHistorique(id){
+      let historique = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      historique = historique.filter(x => x.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(historique));
+      afficherHistorique();
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function initSignature(canvasId){
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+
+      function resizeCanvas(){
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * ratio;
+        canvas.height = rect.height * ratio;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#000";
+      }
+
+      resizeCanvas();
+
+      let drawing = false;
+
+      function getPos(e){
+        const rect = canvas.getBoundingClientRect();
+        if(e.touches && e.touches[0]){
+          return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+          };
+        }
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      }
+
+      function start(e){
+        drawing = true;
+        const p = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        e.preventDefault();
+      }
+
+      function move(e){
+        if(!drawing) return;
+        const p = getPos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        e.preventDefault();
+      }
+
+      function end(e){
+        drawing = false;
+        e && e.preventDefault();
+      }
+
+      canvas.addEventListener("mousedown", start);
+      canvas.addEventListener("mousemove", move);
+      window.addEventListener("mouseup", end);
+
+      canvas.addEventListener("touchstart", start, { passive:false });
+      canvas.addEventListener("touchmove", move, { passive:false });
+      window.addEventListener("touchend", end, { passive:false });
+
+      window.addEventListener("resize", resizeCanvas);
+    }
+
+    function effacerSignature(canvasId){
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Initialisation
+    initSignature("signatureClient");
+    initSignature("signatureTech");
+    afficherHistorique();
+  </script>
 </body>
 </html>
