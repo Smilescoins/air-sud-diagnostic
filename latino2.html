@@ -84,7 +84,8 @@ button{
 
 <button onclick="diag()">ANALIZAR</button>
 <button onclick="save()">GUARDAR</button>
-<button onclick="history()">HISTORIAL</button>
+<button onclick="showHistory()">HISTORIAL</button>
+<button onclick="deleteClient()">BORRAR CLIENTE</button>
 
 </div>
 
@@ -111,7 +112,7 @@ let ventInt = document.getElementById("ventiloInt").value;
 let txt="";
 let cert=0;
 
-// LOGIQUE PRINCIPALE
+// DIAGNOSTIC
 
 if(sh>15 && sr<5){
   txt+="🔥 FALTA DE REFRIGERANTE IMPORTANTE\n";
@@ -169,7 +170,7 @@ document.getElementById("result").innerText=txt;
 }
 
 
-// SAUVEGARDE CLIENT
+// SAVE
 
 function save(){
 
@@ -197,18 +198,53 @@ alert("Guardado ✔");
 
 // HISTORIQUE
 
-function history(){
+function showHistory(){
 
 let data = JSON.parse(localStorage.getItem("clientes")||"[]");
 
+if(data.length===0){
+  alert("No hay clientes");
+  return;
+}
+
 let txt="📂 HISTORIAL\n\n";
 
-data.forEach(c=>{
-  txt+=c.nom+" - "+c.date+"\n";
+data.forEach((c,index)=>{
+  txt+=index+" - "+c.nom+" ("+c.date+")\n";
   txt+=c.res+"\n\n";
 });
 
 alert(txt);
+}
+
+
+// DELETE
+
+function deleteClient(){
+
+let data = JSON.parse(localStorage.getItem("clientes")||"[]");
+
+if(data.length===0){
+  alert("No hay clientes");
+  return;
+}
+
+let index = prompt("Número del cliente a borrar:");
+
+if(index===null) return;
+
+index = parseInt(index);
+
+if(isNaN(index) || index<0 || index>=data.length){
+  alert("Número inválido");
+  return;
+}
+
+data.splice(index,1);
+
+localStorage.setItem("clientes",JSON.stringify(data));
+
+alert("Cliente eliminado ✔");
 }
 
 </script>
