@@ -128,12 +128,18 @@ txt+="\n⚡ VENTILATEUR HS\n";
 if(incoherent){
 
 txt="⚠️ DIAGNOSTIC INCERTAIN\n\n";
+
 txt+="Plusieurs anomalies incohérentes détectées\n\n";
 
-txt+="👉 ACTION PRIORITAIRE :\n";
+txt+="👉 PROCÉDURE IMMÉDIATE :\n";
 txt+="1. Réparer la panne évidente (ventilateur / condenseur)\n";
-txt+="2. Refaire les mesures\n";
-txt+="3. Revalider le diagnostic\n";
+txt+="2. Redémarrer la machine\n";
+txt+="3. Reprendre les mesures BP / HP\n";
+txt+="4. Relancer le diagnostic\n\n";
+
+txt+="❌ INTERDICTION :\n";
+txt+="- Ne pas recharger en fluide\n";
+txt+="- Ne pas conclure trop tôt\n";
 
 certitude=1;
 }
