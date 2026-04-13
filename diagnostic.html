@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Air Sud Diagnostic Expert V3</title>
+<title>Air Sud Diagnostic Expert V4</title>
 
 <style>
 body{font-family:Arial;background:#111;color:#fff;padding:15px}
@@ -16,13 +16,14 @@ button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-s
 
 <body>
 
-<h2>Air Sud Diagnostic Expert V3</h2>
+<h2>Air Sud Diagnostic Expert V4</h2>
 
 <div class="card">
 <input id="bp" placeholder="BP (bar)">
 <input id="hp" placeholder="HP (bar)">
 <input id="dt" placeholder="Delta T (°C)">
 <input id="amp" placeholder="Intensité (A)">
+<input id="tempExt" placeholder="Température extérieure (°C)">
 
 <select id="ventiloExt">
 <option value="">Ventilateur condenseur</option>
@@ -36,131 +37,249 @@ button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-s
 <option value="hs">HS</option>
 </select>
 
+<select id="givre">
+<option value="">Givre</option>
+<option value="aucun">Aucun</option>
+<option value="leger">Léger</option>
+<option value="important">Important</option>
+</select>
+
+<select id="tuyauAsp">
+<option value="">Tuyau aspiration</option>
+<option value="froide">Froide</option>
+<option value="tiede">Tiède</option>
+<option value="chaude">Chaude</option>
+</select>
+
+<select id="tuyauLiquide">
+<option value="">Tuyau liquide</option>
+<option value="chaud">Chaud</option>
+<option value="normal">Normal</option>
+<option value="froid">Froid</option>
+</select>
+
 <button onclick="diag()">Analyser</button>
 </div>
 
 <div class="card result" id="result">Résultat...</div>
 
 <script>
-
 function val(id){
-return parseFloat(document.getElementById(id).value)||0
+  return parseFloat(document.getElementById(id).value) || 0;
 }
 
 function diag(){
 
-let bp=val("bp");
-let hp=val("hp");
-let dt=val("dt");
-let amp=val("amp");
+  let bp = val("bp");
+  let hp = val("hp");
+  let dt = val("dt");
+  let amp = val("amp");
+  let tempExt = val("tempExt");
 
-let ventiloExt=document.getElementById("ventiloExt").value;
-let ventiloInt=document.getElementById("ventiloInt").value;
+  let ventiloExt = document.getElementById("ventiloExt").value;
+  let ventiloInt = document.getElementById("ventiloInt").value;
+  let givre = document.getElementById("givre").value;
+  let tuyauAsp = document.getElementById("tuyauAsp").value;
+  let tuyauLiquide = document.getElementById("tuyauLiquide").value;
 
-let txt="";
-let certitude=0;
-let incoherent=false;
+  let txt = "";
+  let certitude = 0;
+  let incoherent = false;
 
-// ===== INCOHERENCE =====
-if(bp<3 && hp>20){incoherent=true;}
-if(ventiloExt==="hs" && hp>20){incoherent=true;}
+  // ===== INCOHERENCES =====
+  if(bp < 3 && hp > 20){ incoherent = true; }
+  if(ventiloExt === "hs" && hp > 20){ incoherent = true; }
+  if(tuyauAsp === "chaude" && bp < 3){ incoherent = true; }
 
-// ===== MANQUE FLUIDE FORT =====
-if(!incoherent && bp<3 && hp<10){
+  // ===== MANQUE DE FLUIDE IMPORTANT =====
+  if(!incoherent && bp < 3 && hp < 10){
+    txt += "🔴 DIAGNOSTIC : MANQUE DE FLUIDE IMPORTANT\n";
+    certitude += 3;
 
-txt+="🔴 MANQUE DE FLUIDE IMPORTANT\n";
-certitude+=3;
+    if(dt < 5){
+      txt += "👉 Mauvais rendement confirmé\n";
+      certitude += 2;
+    }
 
-if(dt<5){
-txt+="👉 Mauvais rendement confirmé\n";
-certitude+=2;
+    if(tuyauAsp === "tiede" || tuyauAsp === "chaude"){
+      txt += "👉 Tuyau aspiration anormal → sous-charge renforcée\n";
+      certitude += 1;
+    }
+
+    if(tuyauLiquide === "froid"){
+      txt += "👉 Tuyau liquide anormalement froid\n";
+      certitude += 1;
+    }
+
+    txt += "\nPROCÉDURE :\n";
+    txt += "1. Contrôle visuel\n";
+    txt += "2. Recherche fuite\n";
+    txt += "3. Mise sous azote\n";
+    txt += "4. Réparation\n";
+    txt += "5. Test étanchéité\n";
+    txt += "6. Tirage au vide\n";
+    txt += "7. Recharge\n";
+  }
+
+  // ===== MANQUE DE FLUIDE LEGER =====
+  else if(!incoherent && bp < 3 && hp >= 10 && hp <= 20){
+    txt += "🟠 DIAGNOSTIC : MANQUE DE FLUIDE POSSIBLE (léger)\n";
+    certitude += 2;
+
+    if(dt <= 5){
+      txt += "👉 Rendement limite\n";
+      certitude += 2;
+    }
+
+    if(tuyauAsp === "tiede"){
+      txt += "👉 Aspiration tiède : suspicion renforcée\n";
+      certitude += 1;
+    }
+
+    txt += "\nACTION :\n";
+    txt += "- Contrôle visuel\n";
+    txt += "- Vérification performance\n";
+    txt += "- Surveillance avant recharge\n";
+  }
+
+  // ===== COMPRESSEUR =====
+  else if(!incoherent && bp > 6 && hp < 12){
+    txt += "⚠️ DIAGNOSTIC : COMPRESSEUR FATIGUÉ\n";
+    certitude += 3;
+
+    if(amp > 8){
+      txt += "👉 Intensité anormale\n";
+      certitude += 2;
+    }
+
+    if(tuyauAsp === "chaude"){
+      txt += "👉 Aspiration chaude : compression suspecte\n";
+      certitude += 1;
+    }
+
+    txt += "\nPROCÉDURE :\n";
+    txt += "1. Vérifier alimentation\n";
+    txt += "2. Contrôler intensité\n";
+    txt += "3. Vérifier démarrage\n";
+    txt += "4. Contrôle en charge\n";
+    txt += "5. Conclusion client\n";
+  }
+
+  // ===== DETENDEUR / RESTRICTION =====
+  if(!incoherent && bp < 3 && hp >= 12 && hp <= 20 && givre === "important"){
+    txt += "\n❄️ DIAGNOSTIC : DÉTENDEUR / RESTRICTION POSSIBLE\n";
+    certitude += 3;
+
+    if(tuyauAsp === "froide"){
+      txt += "👉 Aspiration très froide / givre cohérent\n";
+      certitude += 1;
+    }
+
+    txt += "\nPROCÉDURE :\n";
+    txt += "1. Contrôler détendeur\n";
+    txt += "2. Vérifier débit air\n";
+    txt += "3. Contrôler éventuel bouchon\n";
+  }
+
+  // ===== CONDENSEUR / HAUTE PRESSION =====
+  if(hp > 20){
+    txt += "\n🔥 DIAGNOSTIC : CONDENSEUR / SURCHAUFFE\n";
+    certitude += 2;
+
+    if(tempExt >= 35){
+      txt += "👉 Température extérieure élevée : HP naturellement plus haute\n";
+    } else {
+      txt += "👉 HP anormale par rapport aux conditions extérieures\n";
+      certitude += 1;
+    }
+  }
+
+  // ===== VENTILO CONDENSEUR =====
+  if(ventiloExt === "hs"){
+    txt += "\n⚡ VENTILATEUR CONDENSEUR HS\n";
+    txt += "👉 Risque haute pression / sécurité\n";
+    certitude += 2;
+  }
+
+  // ===== VENTILO EVAPORATEUR =====
+  if(ventiloInt === "hs"){
+    txt += "\n❄️ VENTILATEUR ÉVAPORATEUR HS\n";
+    txt += "👉 Mauvais soufflage / rendement faible\n";
+    certitude += 2;
+
+    if(dt < 5){
+      txt += "👉 ΔT anormal confirmé\n";
+      certitude += 1;
+    }
+  }
+
+  // ===== GIVRE =====
+  if(givre === "leger"){
+    txt += "\n🧊 GIVRE LÉGER OBSERVÉ\n";
+    txt += "👉 À surveiller : débit air / charge / détente\n";
+  }
+
+  if(givre === "important"){
+    txt += "\n🧊 GIVRE IMPORTANT OBSERVÉ\n";
+    txt += "👉 Défaut évaporateur / détente / débit d’air probable\n";
+    certitude += 1;
+  }
+
+  // ===== ANALYSE TUYAUX =====
+  if(tuyauAsp === "froide"){
+    txt += "\n🌡️ Aspiration froide\n";
+  }
+  if(tuyauAsp === "tiede"){
+    txt += "\n🌡️ Aspiration tiède\n";
+  }
+  if(tuyauAsp === "chaude"){
+    txt += "\n🌡️ Aspiration chaude (anormal)\n";
+  }
+
+  if(tuyauLiquide === "chaud"){
+    txt += "\n🌡️ Ligne liquide chaude\n";
+  }
+  if(tuyauLiquide === "normal"){
+    txt += "\n🌡️ Ligne liquide normale\n";
+  }
+  if(tuyauLiquide === "froid"){
+    txt += "\n🌡️ Ligne liquide froide (anormal)\n";
+  }
+
+  // ===== ELECTRIQUE =====
+  if(amp > 8){
+    txt += "\n⚡ SURCONSOMMATION\n";
+  }
+
+  // ===== INCOHERENCE =====
+  if(incoherent){
+    txt = "⚠️ DIAGNOSTIC INCERTAIN\n\n";
+    txt += "Plusieurs anomalies incohérentes détectées\n\n";
+    txt += "👉 PROCÉDURE IMMÉDIATE :\n";
+    txt += "1. Réparer panne évidente\n";
+    txt += "2. Redémarrer machine\n";
+    txt += "3. Reprendre mesures\n";
+    txt += "4. Revalider diagnostic\n\n";
+    txt += "❌ INTERDICTION :\n";
+    txt += "- Ne pas recharger\n";
+    txt += "- Ne pas conclure trop tôt\n";
+    certitude = 1;
+  }
+
+  // ===== SI RIEN DE NET =====
+  if(txt.trim() === ""){
+    txt = "ℹ️ Aucune panne nette détectée.\n\n";
+    txt += "👉 Continuer l’analyse avec mesures complémentaires.\n";
+  }
+
+  // ===== CERTITUDE =====
+  txt += "\n\n🎯 CERTITUDE : ";
+  if(certitude >= 5){ txt += "ÉLEVÉ"; }
+  else if(certitude >= 3){ txt += "MOYEN"; }
+  else { txt += "FAIBLE"; }
+
+  document.getElementById("result").innerText = txt;
 }
-
-txt+="\nPROCÉDURE :\n";
-txt+="1. Contrôle visuel\n";
-txt+="2. Recherche fuite\n";
-txt+="3. Azote\n";
-txt+="4. Réparation\n";
-txt+="5. Test étanchéité\n";
-txt+="6. Tirage au vide\n";
-txt+="7. Recharge\n";
-}
-
-// ===== MANQUE FLUIDE LEGER =====
-else if(!incoherent && bp<3 && hp>=10 && hp<=20){
-
-txt+="🟠 MANQUE DE FLUIDE POSSIBLE (léger)\n";
-certitude+=2;
-
-if(dt<=5){
-txt+="👉 Rendement limite\n";
-certitude+=2;
-}
-
-txt+="\nACTION :\n";
-txt+="- Surveillance\n";
-txt+="- Vérification visuelle\n";
-txt+="- Éviter recharge directe\n";
-}
-
-// ===== COMPRESSEUR =====
-else if(!incoherent && bp>6 && hp<12){
-
-txt+="⚠️ COMPRESSEUR FATIGUÉ\n";
-certitude+=3;
-
-if(amp>8){
-txt+="👉 Intensité anormale\n";
-certitude+=2;
-}
-}
-
-// ===== CONDENSEUR =====
-if(hp>20){
-txt+="\n🔥 CONDENSEUR / SURCHAUFFE\n";
-}
-
-// ===== VENTILO EXT =====
-if(ventiloExt==="hs"){
-txt+="\n⚡ VENTILATEUR CONDENSEUR HS\n";
-certitude+=2;
-}
-
-// ===== VENTILO INT =====
-if(ventiloInt==="hs"){
-txt+="\n❄️ VENTILATEUR ÉVAPORATEUR HS\n";
-if(dt<5){
-txt+="👉 ΔT anormal\n";
-certitude+=2;
-}
-}
-
-// ===== ELECTRIQUE =====
-if(amp>8){
-txt+="\n⚡ SURCONSOMMATION\n";
-}
-
-// ===== INCOHERENCE =====
-if(incoherent){
-
-txt="⚠️ DIAGNOSTIC INCERTAIN\n\n";
-txt+="👉 Réparer panne évidente\n";
-txt+="👉 Refaire mesures\n";
-txt+="👉 Relancer diagnostic\n";
-
-certitude=1;
-}
-
-// ===== CERTITUDE =====
-txt+="\n\n🎯 CERTITUDE : ";
-
-if(certitude>=5){txt+="ÉLEVÉ";}
-else if(certitude>=3){txt+="MOYEN";}
-else{txt+="FAIBLE";}
-
-document.getElementById("result").innerText=txt;
-}
-
 </script>
 
 </body>
