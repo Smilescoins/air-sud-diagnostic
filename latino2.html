@@ -6,51 +6,12 @@
 <title>HVAC Latino Pro</title>
 
 <style>
-body{
-  font-family:Arial;
-  background:#111;
-  color:white;
-  padding:15px;
-}
-
-h1{
-  color:#ff6600;
-}
-
-.card{
-  background:#1c1c1c;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:10px;
-}
-
-input, select{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  border-radius:8px;
-  border:none;
-  font-size:16px;
-}
-
-button{
-  width:100%;
-  padding:12px;
-  background:#ff6600;
-  color:white;
-  border:none;
-  border-radius:10px;
-  font-size:18px;
-  margin-top:8px;
-}
-
-.result{
-  background:#222;
-  padding:15px;
-  border-radius:10px;
-  margin-top:10px;
-  white-space:pre-wrap;
-}
+body{font-family:Arial;background:#111;color:white;padding:15px;}
+h1{color:#ff6600;}
+.card{background:#1c1c1c;padding:15px;border-radius:10px;margin-bottom:10px;}
+input, select{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:none;font-size:16px;}
+button{width:100%;padding:12px;background:#ff6600;color:white;border:none;border-radius:10px;font-size:18px;margin-top:8px;}
+.result{background:#222;padding:15px;border-radius:10px;margin-top:10px;white-space:pre-wrap;}
 </style>
 </head>
 
@@ -93,18 +54,29 @@ button{
 
 <script>
 
-function val(id){
-  return parseFloat(document.getElementById(id).value) || 0;
-}
-
 function diag(){
 
-let bp = val("bp");
-let hp = val("hp");
-let dt = val("dt");
-let amp = val("amp");
-let sh = val("sh");
-let sr = val("sr");
+let bp = document.getElementById("bp").value;
+let hp = document.getElementById("hp").value;
+let dt = document.getElementById("dt").value;
+let amp = document.getElementById("amp").value;
+let sh = document.getElementById("sh").value;
+let sr = document.getElementById("sr").value;
+
+// 🔒 sécurité intégrée
+if(bp==="" && hp==="" && dt==="" && amp==="" && sh==="" && sr===""){
+  document.getElementById("result").innerText =
+  "⚠️ Introducir datos antes de analizar";
+  return;
+}
+
+// conversion
+bp = parseFloat(bp) || 0;
+hp = parseFloat(hp) || 0;
+dt = parseFloat(dt) || 0;
+amp = parseFloat(amp) || 0;
+sh = parseFloat(sh) || 0;
+sr = parseFloat(sr) || 0;
 
 let ventExt = document.getElementById("ventiloExt").value;
 let ventInt = document.getElementById("ventiloInt").value;
@@ -112,7 +84,7 @@ let ventInt = document.getElementById("ventiloInt").value;
 let txt="";
 let cert=0;
 
-// DIAGNOSTIC
+// DIAGNOSTIC PROPRE
 
 if(sh>15 && sr<5){
   txt+="🔥 FALTA DE REFRIGERANTE IMPORTANTE\n";
@@ -129,7 +101,7 @@ if(sr<5){
   cert+=2;
 }
 
-if(bp<3 && hp<10){
+if(bp<3 && hp<10 && bp!==0 && hp!==0){
   txt+="\n🔴 Falta de refrigerante confirmada\n";
   cert+=3;
 }
@@ -154,14 +126,17 @@ if(ventInt=="hs"){
   cert+=2;
 }
 
-if(dt<5){
+if(dt<5 && dt!==0){
   txt+="\n❌ Bajo rendimiento\n";
 }
 
-// CERTITUDE
+// fallback intelligent
+if(txt===""){
+  txt="ℹ️ Datos insuficientes para diagnóstico fiable";
+}
 
+// certitude
 txt+="\n\n🎯 NIVEL DE CONFIANZA: ";
-
 if(cert>=6) txt+="ALTO";
 else if(cert>=3) txt+="MEDIO";
 else txt+="BAJO";
@@ -171,9 +146,7 @@ document.getElementById("result").innerText=txt;
 
 
 // SAVE
-
 function save(){
-
 let nombre = document.getElementById("cliente").value;
 let res = document.getElementById("result").innerText;
 
@@ -197,9 +170,7 @@ alert("Guardado ✔");
 
 
 // HISTORIQUE
-
 function showHistory(){
-
 let data = JSON.parse(localStorage.getItem("clientes")||"[]");
 
 if(data.length===0){
@@ -219,9 +190,7 @@ alert(txt);
 
 
 // DELETE
-
 function deleteClient(){
-
 let data = JSON.parse(localStorage.getItem("clientes")||"[]");
 
 if(data.length===0){
