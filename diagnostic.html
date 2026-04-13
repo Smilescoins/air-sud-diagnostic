@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Air Sud Diagnostic Pro</title>
+
+<style>
+body{font-family:Arial;background:#111;color:#fff;padding:15px}
+input,select{width:100%;padding:12px;margin:6px 0;font-size:16px}
+button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-size:18px}
+.card{background:#1c1c1c;padding:15px;margin-bottom:10px;border-radius:10px}
+.result{white-space:pre-wrap}
+</style>
+</head>
+
+<body>
+
+<h2>Air Sud Diagnostic Pro</h2>
+
+<div class="card">
+<input id="bp" placeholder="BP (bar)">
+<input id="hp" placeholder="HP (bar)">
+<input id="dt" placeholder="Delta T (°C)">
+<input id="amp" placeholder="Intensité (A)">
+<select id="ventilo">
+<option value="">Ventilateur</option>
+<option value="ok">OK</option>
+<option value="hs">HS</option>
+</select>
+
+<button onclick="diag()">Analyser</button>
+</div>
+
+<div class="card result" id="result">
+Résultat...
+</div>
+
+<script>
+
+function val(id){return parseFloat(document.getElementById(id).value)||0}
+
+function diag(){
+
+let bp=val("bp");
+let hp=val("hp");
+let dt=val("dt");
+let amp=val("amp");
+let ventilo=document.getElementById("ventilo").value;
+
+let txt="";
+
+if(bp<3 && hp<10){
+txt+="🔴 Manque de fluide probable\n\n";
+txt+="PROCÉDURE :\n";
+txt+="1. Contrôle visuel (huile)\n";
+txt+="2. Mise sous azote 30 bar\n";
+txt+="3. Recherche fuite\n";
+txt+="4. Réparation\n";
+txt+="5. Tirage au vide\n";
+txt+="6. Recharge\n";
+}
+
+else if(bp>6 && hp<12){
+txt+="⚠️ Compresseur fatigué\n\n";
+txt+="PROCÉDURE :\n";
+txt+="1. Vérifier intensité\n";
+txt+="2. Vérifier démarrage\n";
+txt+="3. Contrôle en charge\n";
+txt+="4. Conclusion client\n";
+}
+
+if(hp>20){
+txt+="\n🔥 Condenseur encrassé\n";
+}
+
+if(dt<5){
+txt+="\n❌ Mauvais rendement\n";
+}
+
+if(amp>8){
+txt+="\n⚡ Surconsommation électrique\n";
+}
+
+if(ventilo==="hs"){
+txt+="\n⚡ Ventilateur HS\n";
+}
+
+document.getElementById("result").innerText=txt;
+}
+
+</script>
+
+</body>
+</html>
