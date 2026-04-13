@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Air Sud Diagnostic Expert</title>
+<title>Air Sud Diagnostic Expert V3</title>
 
 <style>
 body{font-family:Arial;background:#111;color:#fff;padding:15px}
@@ -16,7 +16,7 @@ button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-s
 
 <body>
 
-<h2>Air Sud Diagnostic Expert</h2>
+<h2>Air Sud Diagnostic Expert V3</h2>
 
 <div class="card">
 <input id="bp" placeholder="BP (bar)">
@@ -39,9 +39,7 @@ button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-s
 <button onclick="diag()">Analyser</button>
 </div>
 
-<div class="card result" id="result">
-Résultat...
-</div>
+<div class="card result" id="result">Résultat...</div>
 
 <script>
 
@@ -67,25 +65,42 @@ let incoherent=false;
 if(bp<3 && hp>20){incoherent=true;}
 if(ventiloExt==="hs" && hp>20){incoherent=true;}
 
-// ===== MANQUE DE FLUIDE =====
+// ===== MANQUE FLUIDE FORT =====
 if(!incoherent && bp<3 && hp<10){
 
-txt+="🔴 DIAGNOSTIC : MANQUE DE FLUIDE PROBABLE\n";
+txt+="🔴 MANQUE DE FLUIDE IMPORTANT\n";
 certitude+=3;
 
 if(dt<5){
-txt+="👉 Confirmation : mauvais rendement\n";
+txt+="👉 Mauvais rendement confirmé\n";
 certitude+=2;
 }
 
-txt+="\nPROCÉDURE PRO :\n";
+txt+="\nPROCÉDURE :\n";
 txt+="1. Contrôle visuel\n";
-txt+="2. Recherche de fuite\n";
-txt+="3. Mise sous azote\n";
+txt+="2. Recherche fuite\n";
+txt+="3. Azote\n";
 txt+="4. Réparation\n";
 txt+="5. Test étanchéité\n";
 txt+="6. Tirage au vide\n";
 txt+="7. Recharge\n";
+}
+
+// ===== MANQUE FLUIDE LEGER =====
+else if(!incoherent && bp<3 && hp>=10 && hp<=20){
+
+txt+="🟠 MANQUE DE FLUIDE POSSIBLE (léger)\n";
+certitude+=2;
+
+if(dt<=5){
+txt+="👉 Rendement limite\n";
+certitude+=2;
+}
+
+txt+="\nACTION :\n";
+txt+="- Surveillance\n";
+txt+="- Vérification visuelle\n";
+txt+="- Éviter recharge directe\n";
 }
 
 // ===== COMPRESSEUR =====
@@ -95,30 +110,27 @@ txt+="⚠️ COMPRESSEUR FATIGUÉ\n";
 certitude+=3;
 
 if(amp>8){
-txt+="👉 Intensité élevée\n";
+txt+="👉 Intensité anormale\n";
 certitude+=2;
 }
 }
 
 // ===== CONDENSEUR =====
 if(hp>20){
-txt+="\n🔥 CONDENSEUR ENCRASSÉ / SURCHAUFFE\n";
+txt+="\n🔥 CONDENSEUR / SURCHAUFFE\n";
 }
 
 // ===== VENTILO EXT =====
 if(ventiloExt==="hs"){
 txt+="\n⚡ VENTILATEUR CONDENSEUR HS\n";
-txt+="👉 Risque haute pression / sécurité\n";
 certitude+=2;
 }
 
 // ===== VENTILO INT =====
 if(ventiloInt==="hs"){
 txt+="\n❄️ VENTILATEUR ÉVAPORATEUR HS\n";
-txt+="👉 Mauvais soufflage / rendement faible\n";
-
 if(dt<5){
-txt+="👉 Confirmation : ΔT anormal\n";
+txt+="👉 ΔT anormal\n";
 certitude+=2;
 }
 }
@@ -132,24 +144,15 @@ txt+="\n⚡ SURCONSOMMATION\n";
 if(incoherent){
 
 txt="⚠️ DIAGNOSTIC INCERTAIN\n\n";
-
-txt+="Plusieurs anomalies incohérentes détectées\n\n";
-
-txt+="👉 PROCÉDURE IMMÉDIATE :\n";
-txt+="1. Réparer panne évidente\n";
-txt+="2. Redémarrer machine\n";
-txt+="3. Reprendre mesures\n";
-txt+="4. Revalider diagnostic\n\n";
-
-txt+="❌ INTERDICTION :\n";
-txt+="- Ne pas recharger\n";
-txt+="- Ne pas conclure\n";
+txt+="👉 Réparer panne évidente\n";
+txt+="👉 Refaire mesures\n";
+txt+="👉 Relancer diagnostic\n";
 
 certitude=1;
 }
 
 // ===== CERTITUDE =====
-txt+="\n\n🎯 NIVEAU DE CERTITUDE : ";
+txt+="\n\n🎯 CERTITUDE : ";
 
 if(certitude>=5){txt+="ÉLEVÉ";}
 else if(certitude>=3){txt+="MOYEN";}
