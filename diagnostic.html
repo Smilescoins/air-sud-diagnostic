@@ -23,8 +23,15 @@ button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-s
 <input id="hp" placeholder="HP (bar)">
 <input id="dt" placeholder="Delta T (°C)">
 <input id="amp" placeholder="Intensité (A)">
-<select id="ventilo">
-<option value="">Ventilateur</option>
+
+<select id="ventiloExt">
+<option value="">Ventilateur condenseur</option>
+<option value="ok">OK</option>
+<option value="hs">HS</option>
+</select>
+
+<select id="ventiloInt">
+<option value="">Ventilateur évaporateur</option>
 <option value="ok">OK</option>
 <option value="hs">HS</option>
 </select>
@@ -48,21 +55,17 @@ let bp=val("bp");
 let hp=val("hp");
 let dt=val("dt");
 let amp=val("amp");
-let ventilo=document.getElementById("ventilo").value;
+
+let ventiloExt=document.getElementById("ventiloExt").value;
+let ventiloInt=document.getElementById("ventiloInt").value;
 
 let txt="";
 let certitude=0;
 let incoherent=false;
 
-// ===== DETECTION INCOHERENCE =====
-
-if(bp<3 && hp>20){
-incoherent=true;
-}
-
-if(ventilo==="hs" && hp>20){
-incoherent=true;
-}
+// ===== INCOHERENCE =====
+if(bp<3 && hp>20){incoherent=true;}
+if(ventiloExt==="hs" && hp>20){incoherent=true;}
 
 // ===== MANQUE DE FLUIDE =====
 if(!incoherent && bp<3 && hp<10){
@@ -76,42 +79,48 @@ certitude+=2;
 }
 
 txt+="\nPROCÉDURE PRO :\n";
-txt+="1. Contrôle visuel (huile / traces)\n";
+txt+="1. Contrôle visuel\n";
 txt+="2. Recherche de fuite\n";
-txt+="3. Mise sous azote (30 bar)\n";
-txt+="4. Réparation (brasure)\n";
-txt+="5. Épreuve d’étanchéité\n";
+txt+="3. Mise sous azote\n";
+txt+="4. Réparation\n";
+txt+="5. Test étanchéité\n";
 txt+="6. Tirage au vide\n";
 txt+="7. Recharge\n";
-
-txt+="\n⚠️ Recharge interdite sans test d’étanchéité\n";
 }
 
 // ===== COMPRESSEUR =====
 else if(!incoherent && bp>6 && hp<12){
 
-txt+="⚠️ DIAGNOSTIC : COMPRESSEUR FATIGUÉ\n";
+txt+="⚠️ COMPRESSEUR FATIGUÉ\n";
 certitude+=3;
 
 if(amp>8){
-txt+="👉 Intensité élevée = effort anormal\n";
+txt+="👉 Intensité élevée\n";
 certitude+=2;
 }
-
-txt+="\nPROCÉDURE PRO :\n";
-txt+="1. Vérifier alimentation\n";
-txt+="2. Contrôle intensité\n";
-txt+="3. Vérifier démarrage\n";
-txt+="4. Test en charge\n";
-txt+="5. Conclusion client\n";
-
 }
 
 // ===== CONDENSEUR =====
 if(hp>20){
-
 txt+="\n🔥 CONDENSEUR ENCRASSÉ / SURCHAUFFE\n";
+}
 
+// ===== VENTILO EXT =====
+if(ventiloExt==="hs"){
+txt+="\n⚡ VENTILATEUR CONDENSEUR HS\n";
+txt+="👉 Risque haute pression / sécurité\n";
+certitude+=2;
+}
+
+// ===== VENTILO INT =====
+if(ventiloInt==="hs"){
+txt+="\n❄️ VENTILATEUR ÉVAPORATEUR HS\n";
+txt+="👉 Mauvais soufflage / rendement faible\n";
+
+if(dt<5){
+txt+="👉 Confirmation : ΔT anormal\n";
+certitude+=2;
+}
 }
 
 // ===== ELECTRIQUE =====
@@ -119,12 +128,7 @@ if(amp>8){
 txt+="\n⚡ SURCONSOMMATION\n";
 }
 
-if(ventilo==="hs"){
-txt+="\n⚡ VENTILATEUR HS\n";
-}
-
 // ===== INCOHERENCE =====
-
 if(incoherent){
 
 txt="⚠️ DIAGNOSTIC INCERTAIN\n\n";
@@ -132,29 +136,24 @@ txt="⚠️ DIAGNOSTIC INCERTAIN\n\n";
 txt+="Plusieurs anomalies incohérentes détectées\n\n";
 
 txt+="👉 PROCÉDURE IMMÉDIATE :\n";
-txt+="1. Réparer la panne évidente (ventilateur / condenseur)\n";
-txt+="2. Redémarrer la machine\n";
-txt+="3. Reprendre les mesures BP / HP\n";
-txt+="4. Relancer le diagnostic\n\n";
+txt+="1. Réparer panne évidente\n";
+txt+="2. Redémarrer machine\n";
+txt+="3. Reprendre mesures\n";
+txt+="4. Revalider diagnostic\n\n";
 
 txt+="❌ INTERDICTION :\n";
-txt+="- Ne pas recharger en fluide\n";
-txt+="- Ne pas conclure trop tôt\n";
+txt+="- Ne pas recharger\n";
+txt+="- Ne pas conclure\n";
 
 certitude=1;
 }
 
 // ===== CERTITUDE =====
-
 txt+="\n\n🎯 NIVEAU DE CERTITUDE : ";
 
-if(certitude>=5){
-txt+="ÉLEVÉ";
-}else if(certitude>=3){
-txt+="MOYEN";
-}else{
-txt+="FAIBLE";
-}
+if(certitude>=5){txt+="ÉLEVÉ";}
+else if(certitude>=3){txt+="MOYEN";}
+else{txt+="FAIBLE";}
 
 document.getElementById("result").innerText=txt;
 }
