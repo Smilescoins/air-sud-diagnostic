@@ -6,65 +6,89 @@
 <title>HVAC Latino Pro</title>
 
 <style>
-body{font-family:Arial;background:#111;color:#fff;padding:15px}
-input,select{width:100%;padding:12px;margin:6px 0;font-size:16px}
-button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-size:18px}
-.card{background:#1c1c1c;padding:15px;margin-bottom:10px;border-radius:10px}
-.result{white-space:pre-wrap}
+body{
+  font-family:Arial;
+  background:#111;
+  color:white;
+  padding:15px;
+}
+
+h1{
+  color:#ff6600;
+}
+
+.card{
+  background:#1c1c1c;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+input, select{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  background:#ff6600;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:18px;
+  margin-top:8px;
+}
+
+.result{
+  background:#222;
+  padding:15px;
+  border-radius:10px;
+  margin-top:10px;
+  white-space:pre-wrap;
+}
 </style>
 </head>
 
 <body>
 
-<h2>HVAC Latino Pro</h2>
+<h1>HVAC Latino Pro</h1>
 
 <div class="card">
-<input id="bp" placeholder="Presión baja (bar)">
-<input id="hp" placeholder="Presión alta (bar)">
-<input id="dt" placeholder="Delta T (°C)">
-<input id="amp" placeholder="Corriente (A)">
-<input id="tempExt" placeholder="Temperatura exterior (°C)">
 
-<input id="sh" placeholder="Sobrecalentamiento (°C)">
-<input id="sr" placeholder="Subenfriamiento (°C)">
+<input id="cliente" placeholder="Cliente">
+
+<input id="bp" placeholder="BP (bar)">
+<input id="hp" placeholder="HP (bar)">
+<input id="dt" placeholder="Delta T">
+<input id="amp" placeholder="Intensidad">
+
+<input id="sh" placeholder="Sobrecalentamiento">
+<input id="sr" placeholder="Subenfriamiento">
 
 <select id="ventiloExt">
-<option value="">Ventilador condensador</option>
+<option value="">Ventilador exterior</option>
 <option value="ok">OK</option>
-<option value="hs">Falla</option>
+<option value="hs">HS</option>
 </select>
 
 <select id="ventiloInt">
-<option value="">Ventilador evaporador</option>
+<option value="">Ventilador interior</option>
 <option value="ok">OK</option>
-<option value="hs">Falla</option>
+<option value="hs">HS</option>
 </select>
 
-<select id="givre">
-<option value="">Escarcha</option>
-<option value="ninguno">Ninguna</option>
-<option value="ligero">Ligera</option>
-<option value="importante">Importante</option>
-</select>
+<button onclick="diag()">ANALIZAR</button>
+<button onclick="save()">GUARDAR</button>
+<button onclick="history()">HISTORIAL</button>
 
-<select id="tuyauAsp">
-<option value="">Tubería de aspiración</option>
-<option value="fria">Fría</option>
-<option value="templada">Templada</option>
-<option value="caliente">Caliente</option>
-</select>
-
-<select id="tuyauLiquide">
-<option value="">Línea líquida</option>
-<option value="caliente">Caliente</option>
-<option value="normal">Normal</option>
-<option value="fria">Fría</option>
-</select>
-
-<button onclick="diag()">Analizar</button>
 </div>
 
-<div class="card result" id="result">Resultado...</div>
+<div id="result" class="result">Esperando datos...</div>
 
 <script>
 
@@ -78,96 +102,113 @@ let bp = val("bp");
 let hp = val("hp");
 let dt = val("dt");
 let amp = val("amp");
-let tempExt = val("tempExt");
 let sh = val("sh");
 let sr = val("sr");
 
-let ventiloExt = document.getElementById("ventiloExt").value;
-let ventiloInt = document.getElementById("ventiloInt").value;
-let givre = document.getElementById("givre").value;
-let tuyauAsp = document.getElementById("tuyauAsp").value;
-let tuyauLiquide = document.getElementById("tuyauLiquide").value;
+let ventExt = document.getElementById("ventiloExt").value;
+let ventInt = document.getElementById("ventiloInt").value;
 
 let txt="";
-let certitude=0;
-let incoherente=false;
+let cert=0;
 
-// incoherencias
-if(bp<3 && hp>20){incoherente=true;}
-if(ventiloExt==="hs" && hp>20){incoherente=true;}
+// LOGIQUE PRINCIPALE
 
-// sobrecalentamiento
-if(sh>15){
-txt+="🔥 SOBRECALENTAMIENTO ALTO\n";
-txt+="👉 Falta de refrigerante probable\n";
-certitude+=2;
+if(sh>15 && sr<5){
+  txt+="🔥 FALTA DE REFRIGERANTE IMPORTANTE\n";
+  cert+=4;
 }
 
-if(sh<3 && sh>0){
-txt+="❄️ SOBRECALENTAMIENTO BAJO\n";
-txt+="👉 Problema en válvula de expansión\n";
-certitude+=2;
+if(sh>10){
+  txt+="👉 Sobrecalentamiento alto\n";
+  cert+=2;
 }
 
-// subenfriamiento
-if(sr>15){
-txt+="💧 SUBENFRIAMIENTO ALTO\n";
-txt+="👉 Posible sobrecarga o problema de condensador\n";
-certitude+=2;
+if(sr<5){
+  txt+="👉 Subenfriamiento bajo\n";
+  cert+=2;
 }
 
-if(sr<3 && sr>0){
-txt+="💧 SUBENFRIAMIENTO BAJO\n";
-txt+="👉 Falta de refrigerante posible\n";
-certitude+=2;
+if(bp<3 && hp<10){
+  txt+="\n🔴 Falta de refrigerante confirmada\n";
+  cert+=3;
 }
 
-// falta de refrigerante
-if(!incoherente && bp<3 && hp<10){
-txt+="\n🔴 FALTA DE REFRIGERANTE IMPORTANTE\n";
-certitude+=3;
+if(bp>6 && hp<12){
+  txt+="\n⚠️ Compresor fatigado\n";
+  cert+=3;
 }
 
-// compresor
-else if(!incoherente && bp>6 && hp<12){
-txt+="\n⚠️ COMPRESOR FATIGADO\n";
-certitude+=3;
-}
-
-// condensador
 if(hp>20){
-txt+="\n🔥 PROBLEMA DE CONDENSADOR\n";
+  txt+="\n🔥 Problema de condensación\n";
+  cert+=2;
 }
 
-// ventiladores
-if(ventiloExt==="hs"){
-txt+="\n⚡ VENTILADOR CONDENSADOR DEFECTUOSO\n";
+if(ventExt=="hs"){
+  txt+="\n⚡ Ventilador exterior defectuoso\n";
+  cert+=2;
 }
 
-if(ventiloInt==="hs"){
-txt+="\n❄️ VENTILADOR EVAPORADOR DEFECTUOSO\n";
+if(ventInt=="hs"){
+  txt+="\n❄️ Ventilador interior defectuoso\n";
+  cert+=2;
 }
 
-// incoherencia
-if(incoherente){
-txt="⚠️ DIAGNÓSTICO INCIERTO\n\n";
-txt+="Reparar problema evidente antes de continuar\n";
-certitude=1;
+if(dt<5){
+  txt+="\n❌ Bajo rendimiento\n";
 }
 
-// resultado vacío
-if(txt===""){
-txt="ℹ️ Sin fallo claro detectado\n";
-}
+// CERTITUDE
 
-// certitud
-txt+="\n\n🎯 NIVEL DE CONFIANZA : ";
+txt+="\n\n🎯 NIVEL DE CONFIANZA: ";
 
-if(certitude>=6){txt+="ALTO";}
-else if(certitude>=3){txt+="MEDIO";}
-else{txt+="BAJO";}
+if(cert>=6) txt+="ALTO";
+else if(cert>=3) txt+="MEDIO";
+else txt+="BAJO";
 
 document.getElementById("result").innerText=txt;
+}
+
+
+// SAUVEGARDE CLIENT
+
+function save(){
+
+let nombre = document.getElementById("cliente").value;
+let res = document.getElementById("result").innerText;
+
+if(!nombre){
+  alert("Cliente requerido");
+  return;
+}
+
+let data = JSON.parse(localStorage.getItem("clientes")||"[]");
+
+data.push({
+  nom:nombre,
+  date:new Date().toLocaleString(),
+  res:res
+});
+
+localStorage.setItem("clientes",JSON.stringify(data));
+
+alert("Guardado ✔");
+}
+
+
+// HISTORIQUE
+
+function history(){
+
+let data = JSON.parse(localStorage.getItem("clientes")||"[]");
+
+let txt="📂 HISTORIAL\n\n";
+
+data.forEach(c=>{
+  txt+=c.nom+" - "+c.date+"\n";
+  txt+=c.res+"\n\n";
+});
+
+alert(txt);
 }
 
 </script>
