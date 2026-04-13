@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Air Sud Diagnostic Pro</title>
+<title>Air Sud Diagnostic Expert</title>
 
 <style>
 body{font-family:Arial;background:#111;color:#fff;padding:15px}
@@ -16,7 +16,7 @@ button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-s
 
 <body>
 
-<h2>Air Sud Diagnostic Pro</h2>
+<h2>Air Sud Diagnostic Expert</h2>
 
 <div class="card">
 <input id="bp" placeholder="BP (bar)">
@@ -52,9 +52,20 @@ let ventilo=document.getElementById("ventilo").value;
 
 let txt="";
 let certitude=0;
+let incoherent=false;
+
+// ===== DETECTION INCOHERENCE =====
+
+if(bp<3 && hp>20){
+incoherent=true;
+}
+
+if(ventilo==="hs" && hp>20){
+incoherent=true;
+}
 
 // ===== MANQUE DE FLUIDE =====
-if(bp<3 && hp<10){
+if(!incoherent && bp<3 && hp<10){
 
 txt+="🔴 DIAGNOSTIC : MANQUE DE FLUIDE PROBABLE\n";
 certitude+=3;
@@ -64,23 +75,20 @@ txt+="👉 Confirmation : mauvais rendement\n";
 certitude+=2;
 }
 
-txt+="\nCAUSE PROBABLE :\n";
-txt+="- Fuite sur circuit frigorifique\n";
-
 txt+="\nPROCÉDURE PRO :\n";
 txt+="1. Contrôle visuel (huile / traces)\n";
-txt+="2. Recherche de fuite (savon / détecteur)\n";
+txt+="2. Recherche de fuite\n";
 txt+="3. Mise sous azote (30 bar)\n";
 txt+="4. Réparation (brasure)\n";
-txt+="5. Épreuve d’étanchéité (maintien pression)\n";
+txt+="5. Épreuve d’étanchéité\n";
 txt+="6. Tirage au vide\n";
 txt+="7. Recharge\n";
 
-txt+="\n⚠️ Recharge interdite sans recherche de fuite et test d’étanchéité\n";
+txt+="\n⚠️ Recharge interdite sans test d’étanchéité\n";
 }
 
 // ===== COMPRESSEUR =====
-else if(bp>6 && hp<12){
+else if(!incoherent && bp>6 && hp<12){
 
 txt+="⚠️ DIAGNOSTIC : COMPRESSEUR FATIGUÉ\n";
 certitude+=3;
@@ -90,49 +98,48 @@ txt+="👉 Intensité élevée = effort anormal\n";
 certitude+=2;
 }
 
-txt+="\nCAUSE PROBABLE :\n";
-txt+="- Perte de compression interne\n";
-
 txt+="\nPROCÉDURE PRO :\n";
-txt+="1. Vérifier alimentation électrique\n";
-txt+="2. Contrôler intensité en fonctionnement\n";
-txt+="3. Vérifier démarrage compresseur\n";
-txt+="4. Contrôle en charge\n";
-txt+="5. Conclusion client (pièce dégradée)\n";
+txt+="1. Vérifier alimentation\n";
+txt+="2. Contrôle intensité\n";
+txt+="3. Vérifier démarrage\n";
+txt+="4. Test en charge\n";
+txt+="5. Conclusion client\n";
 
-txt+="\n💬 IMPORTANT : panne souvent antérieure à l’intervention\n";
 }
 
 // ===== CONDENSEUR =====
 if(hp>20){
 
-txt+="\n🔥 DIAGNOSTIC : CONDENSEUR ENCRASSÉ\n";
-certitude+=2;
+txt+="\n🔥 CONDENSEUR ENCRASSÉ / SURCHAUFFE\n";
 
-txt+="\nPROCÉDURE :\n";
-txt+="1. Nettoyage échangeur extérieur\n";
-txt+="2. Vérifier ventilation\n";
 }
 
-// ===== RENDEMENT =====
-if(dt<5){
-txt+="\n❌ MAUVAIS RENDEMENT\n";
-}
-
-// ===== ÉLECTRIQUE =====
+// ===== ELECTRIQUE =====
 if(amp>8){
-txt+="\n⚡ SURCONSOMMATION ÉLECTRIQUE\n";
+txt+="\n⚡ SURCONSOMMATION\n";
 }
 
 if(ventilo==="hs"){
 txt+="\n⚡ VENTILATEUR HS\n";
-txt+="PROCÉDURE :\n";
-txt+="1. Vérifier alimentation\n";
-txt+="2. Vérifier condensateur\n";
-txt+="3. Remplacement\n";
+}
+
+// ===== INCOHERENCE =====
+
+if(incoherent){
+
+txt="⚠️ DIAGNOSTIC INCERTAIN\n\n";
+txt+="Plusieurs anomalies incohérentes détectées\n\n";
+
+txt+="👉 ACTION PRIORITAIRE :\n";
+txt+="1. Réparer la panne évidente (ventilateur / condenseur)\n";
+txt+="2. Refaire les mesures\n";
+txt+="3. Revalider le diagnostic\n";
+
+certitude=1;
 }
 
 // ===== CERTITUDE =====
+
 txt+="\n\n🎯 NIVEAU DE CERTITUDE : ";
 
 if(certitude>=5){
