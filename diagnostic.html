@@ -38,7 +38,9 @@ Résultat...
 
 <script>
 
-function val(id){return parseFloat(document.getElementById(id).value)||0}
+function val(id){
+return parseFloat(document.getElementById(id).value)||0
+}
 
 function diag(){
 
@@ -49,32 +51,96 @@ let amp=val("amp");
 let ventilo=document.getElementById("ventilo").value;
 
 let txt="";
+let certitude=0;
 
+// ===== MANQUE DE FLUIDE =====
 if(bp<3 && hp<10){
-txt+="🔴 Manque de fluide probable\n\n";
-txt+="PROCÉDURE :\n";
-txt+="1. Contrôle visuel (huile)\n";
-txt+="2. Mise sous azote 30 bar\n";
-txt+="3. Recherche fuite\n";
-txt+="4. Réparation\n";
-txt+="5. Tirage au vide\n";
-txt+="6. Recharge\n";
-}
 
-if(hp>20){
-txt+="\n🔥 Condenseur encrassé\n";
-}
+txt+="🔴 DIAGNOSTIC : MANQUE DE FLUIDE PROBABLE\n";
+certitude+=3;
 
 if(dt<5){
-txt+="\n❌ Mauvais rendement\n";
+txt+="👉 Confirmation : mauvais rendement\n";
+certitude+=2;
 }
 
+txt+="\nCAUSE PROBABLE :\n";
+txt+="- Fuite sur circuit frigorifique\n";
+
+txt+="\nPROCÉDURE PRO :\n";
+txt+="1. Contrôle visuel (huile / traces)\n";
+txt+="2. Recherche de fuite (savon / détecteur)\n";
+txt+="3. Mise sous azote (30 bar)\n";
+txt+="4. Réparation (brasure)\n";
+txt+="5. Épreuve d’étanchéité (maintien pression)\n";
+txt+="6. Tirage au vide\n";
+txt+="7. Recharge\n";
+
+txt+="\n⚠️ Recharge interdite sans recherche de fuite et test d’étanchéité\n";
+}
+
+// ===== COMPRESSEUR =====
+else if(bp>6 && hp<12){
+
+txt+="⚠️ DIAGNOSTIC : COMPRESSEUR FATIGUÉ\n";
+certitude+=3;
+
 if(amp>8){
-txt+="\n⚡ Surconsommation électrique\n";
+txt+="👉 Intensité élevée = effort anormal\n";
+certitude+=2;
+}
+
+txt+="\nCAUSE PROBABLE :\n";
+txt+="- Perte de compression interne\n";
+
+txt+="\nPROCÉDURE PRO :\n";
+txt+="1. Vérifier alimentation électrique\n";
+txt+="2. Contrôler intensité en fonctionnement\n";
+txt+="3. Vérifier démarrage compresseur\n";
+txt+="4. Contrôle en charge\n";
+txt+="5. Conclusion client (pièce dégradée)\n";
+
+txt+="\n💬 IMPORTANT : panne souvent antérieure à l’intervention\n";
+}
+
+// ===== CONDENSEUR =====
+if(hp>20){
+
+txt+="\n🔥 DIAGNOSTIC : CONDENSEUR ENCRASSÉ\n";
+certitude+=2;
+
+txt+="\nPROCÉDURE :\n";
+txt+="1. Nettoyage échangeur extérieur\n";
+txt+="2. Vérifier ventilation\n";
+}
+
+// ===== RENDEMENT =====
+if(dt<5){
+txt+="\n❌ MAUVAIS RENDEMENT\n";
+}
+
+// ===== ÉLECTRIQUE =====
+if(amp>8){
+txt+="\n⚡ SURCONSOMMATION ÉLECTRIQUE\n";
 }
 
 if(ventilo==="hs"){
-txt+="\n⚡ Ventilateur HS\n";
+txt+="\n⚡ VENTILATEUR HS\n";
+txt+="PROCÉDURE :\n";
+txt+="1. Vérifier alimentation\n";
+txt+="2. Vérifier condensateur\n";
+txt+="3. Remplacement\n";
+}
+
+// ===== CERTITUDE =====
+txt+="\n\n🎯 NIVEAU DE CERTITUDE : ";
+
+if(certitude>=5){
+txt+="ÉLEVÉ";
+}else if(certitude>=3){
+txt+="MOYEN";
+}else{
+txt+="FAIBLE";
 }
 
 document.getElementById("result").innerText=txt;
