@@ -219,7 +219,10 @@ function generarInforme(){
     informe += "Fecha: " + fecha + "\n\n";
     informe += resultado;
 
-    alert(informe);
+   let url = "https://wa.me/?text=" + encodeURIComponent(informe);
+
+// ouverture directe WhatsApp
+window.location.href = url;
 }
 </script>
 
