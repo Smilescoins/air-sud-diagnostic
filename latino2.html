@@ -1,502 +1,144 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HVAC Latino Pro</title>
+<title>Assistant Climatisation</title>
 
 <style>
-body{
-  font-family:Arial,sans-serif;
-  background:#111;
-  color:#fff;
-  padding:15px;
+body {
+    font-family: Arial;
+    background: #0b3d5c;
+    color: white;
+    text-align: center;
+    padding: 20px;
 }
-h1{
-  color:#ff6600;
-  margin-bottom:10px;
+h1 { color: #00c3ff; }
+button {
+    width: 90%;
+    padding: 15px;
+    margin: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    background: #ff7b00;
+    color: white;
 }
-.card{
-  background:#1c1c1c;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:12px;
+.section { display:none; }
+.active { display:block; }
+.box {
+    background:#123;
+    padding:15px;
+    border-radius:10px;
+    margin-top:15px;
 }
-input, select{
-  width:100%;
-  padding:11px;
-  margin:6px 0;
-  border-radius:8px;
-  border:none;
-  font-size:16px;
-  box-sizing:border-box;
-}
-button{
-  width:100%;
-  padding:12px;
-  background:#ff6600;
-  color:white;
-  border:none;
-  border-radius:10px;
-  font-size:18px;
-  margin-top:8px;
-  cursor:pointer;
-}
-button:hover{
-  opacity:0.95;
-}
-.result{
-  background:#222;
-  padding:15px;
-  border-radius:10px;
-  margin-top:10px;
-  white-space:pre-wrap;
-  line-height:1.5;
-}
-.small{
-  color:#bbb;
-  font-size:14px;
-}
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-@media(max-width:700px){
-  .grid{grid-template-columns:1fr;}
+input {
+    width: 90%;
+    padding:10px;
+    margin:5px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>HVAC Latino Pro</h1>
+<h1>Assistant Diagnostic Clim</h1>
+<p>Outil simple pour technicien terrain</p>
 
-<div class="card">
-  <input id="cliente" placeholder="Cliente">
-
-  <div class="grid">
-    <div>
-      <input id="bp" placeholder="BP (bar)">
-      <input id="hp" placeholder="HP (bar)">
-      <input id="dt" placeholder="Delta T (°C)">
-      <input id="amp" placeholder="Intensidad (A)">
-      <input id="tempExt" placeholder="Temperatura exterior (°C)">
-    </div>
-    <div>
-      <input id="sh" placeholder="Sobrecalentamiento (°C)">
-      <input id="sr" placeholder="Subenfriamiento (°C)">
-
-      <select id="ventiloExt">
-        <option value="">Ventilador exterior</option>
-        <option value="ok">OK</option>
-        <option value="hs">HS</option>
-      </select>
-
-      <select id="ventiloInt">
-        <option value="">Ventilador interior</option>
-        <option value="ok">OK</option>
-        <option value="hs">HS</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="grid">
-    <div>
-      <select id="givre">
-        <option value="">Escarcha</option>
-        <option value="ninguna">Ninguna</option>
-        <option value="ligera">Ligera</option>
-        <option value="importante">Importante</option>
-      </select>
-    </div>
-    <div>
-      <select id="tuyauAsp">
-        <option value="">Tubería de aspiración</option>
-        <option value="fria">Fría</option>
-        <option value="templada">Templada</option>
-        <option value="caliente">Caliente</option>
-      </select>
-    </div>
-  </div>
-
-  <select id="tuyauLiquide">
-    <option value="">Línea líquida</option>
-    <option value="caliente">Caliente</option>
-    <option value="normal">Normal</option>
-    <option value="fria">Fría</option>
-  </select>
-
-  <button onclick="diag()">ANALIZAR</button>
-  <button onclick="saveClient()">GUARDAR</button>
-  <button onclick="showHistory()">HISTORIAL</button>
-  <button onclick="deleteClient()">BORRAR CLIENTE</button>
-
-  <p class="small">Diagnóstico HVAC con apoyo por presiones, SH/SR, ventiladores, escarcha y tacto de tuberías.</p>
+<!-- MENU -->
+<div id="menu" class="active">
+<button onclick="show('diag')">Diagnostic</button>
+<button onclick="show('client')">Clients</button>
+<button onclick="show('historique')">Historique</button>
+<button onclick="show('resume')">Résumé</button>
 </div>
 
-<div id="result" class="result">Esperando datos...</div>
+<!-- DIAGNOSTIC -->
+<div id="diag" class="section">
+<h2>Diagnostic</h2>
+<button onclick="result('froid')">Ne fait plus de froid</button>
+<button onclick="result('chaud')">Ne fait plus de chaud</button>
+<button onclick="result('ventilation')">Ventile seulement</button>
+<button onclick="result('givre')">Givre</button>
+<button onclick="result('demarre')">Ne démarre pas</button>
+
+<div id="res" class="box"></div>
+
+<button onclick="back()">Retour</button>
+</div>
+
+<!-- CLIENT -->
+<div id="client" class="section">
+<h2>Client</h2>
+<input id="nom" placeholder="Nom client">
+<input id="tel" placeholder="Téléphone">
+<button onclick="saveClient()">Enregistrer</button>
+
+<div id="clientList" class="box"></div>
+
+<button onclick="back()">Retour</button>
+</div>
+
+<!-- HISTORIQUE -->
+<div id="historique" class="section">
+<h2>Historique</h2>
+<div id="historyList" class="box"></div>
+<button onclick="back()">Retour</button>
+</div>
+
+<!-- RESUME -->
+<div id="resume" class="section">
+<h2>Résumé intervention</h2>
+<div id="resumeText" class="box">Aucun diagnostic</div>
+<button onclick="back()">Retour</button>
+</div>
 
 <script>
-function num(id){
-  const raw = document.getElementById(id).value.trim().replace(",", ".");
-  if(raw === "") return null;
-  const n = parseFloat(raw);
-  return Number.isNaN(n) ? null : n;
+
+function show(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('menu').classList.remove('active');
+    document.getElementById(id).classList.add('active');
 }
 
-function txt(id){
-  return document.getElementById(id).value;
+function back(){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('menu').classList.add('active');
 }
 
-function diag(){
+function result(type){
+    let txt="";
 
-  const bp = num("bp");
-  const hp = num("hp");
-  const dt = num("dt");
-  const amp = num("amp");
-  const tempExt = num("tempExt");
-  const sh = num("sh");
-  const sr = num("sr");
+    if(type=="froid"){txt="Manque de fluide ou fuite probable";}
+    if(type=="chaud"){txt="Problème cycle chaud ou vanne";}
+    if(type=="ventilation"){txt="Compresseur non actif";}
+    if(type=="givre"){txt="Manque fluide ou débit air faible";}
+    if(type=="demarre"){txt="Problème électrique";}
 
-  const ventExt = txt("ventiloExt");
-  const ventInt = txt("ventiloInt");
-  const givre = txt("givre");
-  const tuyauAsp = txt("tuyauAsp");
-  const tuyauLiquide = txt("tuyauLiquide");
+    document.getElementById("res").innerHTML = txt;
+    document.getElementById("resumeText").innerHTML = txt;
 
-  const nadaNumerico = [bp,hp,dt,amp,tempExt,sh,sr].every(v => v === null);
-  const nadaSelect = [ventExt,ventInt,givre,tuyauAsp,tuyauLiquide].every(v => v === "");
-
-  if(nadaNumerico && nadaSelect){
-    document.getElementById("result").innerText =
-      "⚠️ Introducir datos antes de analizar";
-    return;
-  }
-
-  let out = [];
-  let cert = 0;
-  let incoherente = false;
-
-  // Incoherencias fuertes
-  if(bp !== null && hp !== null && bp < 3 && hp > 20){
-    incoherente = true;
-  }
-  if(ventExt === "hs" && hp !== null && hp > 20){
-    incoherente = true;
-  }
-  if(tuyauAsp === "caliente" && bp !== null && bp < 3){
-    incoherente = true;
-  }
-
-  if(incoherente){
-    out.push("⚠️ DIAGNÓSTICO INCIERTO / FALLA CRUZADA");
-    out.push("");
-    out.push("Se detectaron anomalías incoherentes.");
-    out.push("");
-    out.push("👉 ACCIÓN INMEDIATA:");
-    out.push("1. Reparar la falla evidente");
-    out.push("2. Reiniciar el equipo");
-    out.push("3. Repetir BP / HP / SH / SR / ΔT");
-    out.push("4. Revalidar el diagnóstico");
-    out.push("");
-    out.push("❌ PROHIBIDO:");
-    out.push("- No cargar refrigerante ahora");
-    out.push("- No concluir demasiado pronto");
-    cert = 1;
-  } else {
-
-    // Manque de fluide important
-    if(bp !== null && hp !== null && bp < 3 && hp < 10){
-      out.push("🔴 FALTA DE REFRIGERANTE IMPORTANTE");
-      cert += 3;
-
-      if(sh !== null && sh > 10){
-        out.push("👉 Confirmación por sobrecalentamiento alto");
-        cert += 2;
-      }
-      if(sr !== null && sr < 5){
-        out.push("👉 Confirmación por subenfriamiento bajo");
-        cert += 2;
-      }
-      if(dt !== null && dt < 5){
-        out.push("👉 Bajo rendimiento confirmado");
-        cert += 1;
-      }
-      if(tuyauAsp === "templada" || tuyauAsp === "caliente"){
-        out.push("👉 Aspiración anormal compatible con baja carga");
-        cert += 1;
-      }
-      if(tuyauLiquide === "fria"){
-        out.push("👉 Línea líquida anormalmente fría");
-        cert += 1;
-      }
-
-      out.push("");
-      out.push("PROCEDIMIENTO:");
-      out.push("1. Inspección visual");
-      out.push("2. Búsqueda de fuga");
-      out.push("3. Prueba con nitrógeno");
-      out.push("4. Reparación");
-      out.push("5. Prueba de estanqueidad");
-      out.push("6. Vacío");
-      out.push("7. Carga");
-      out.push("");
-      out.push("❌ No recargar sin localizar y reparar la fuga");
-    }
-
-    // Manque de fluide léger
-    else if(bp !== null && hp !== null && bp < 3 && hp >= 10 && hp <= 20){
-      out.push("🟠 FALTA DE REFRIGERANTE POSIBLE");
-      cert += 2;
-
-      if(sh !== null && sh > 10){
-        out.push("👉 Sobrecalentamiento alto: sospecha reforzada");
-        cert += 2;
-      }
-      if(sr !== null && sr < 5){
-        out.push("👉 Subenfriamiento bajo: sospecha reforzada");
-        cert += 2;
-      }
-      if(dt !== null && dt <= 5){
-        out.push("👉 Rendimiento limitado");
-        cert += 1;
-      }
-      if(tuyauAsp === "templada"){
-        out.push("👉 Aspiración templada");
-        cert += 1;
-      }
-
-      out.push("");
-      out.push("ACCIÓN:");
-      out.push("- Verificar rendimiento");
-      out.push("- Buscar indicios de fuga");
-      out.push("- No cargar sin datos complementarios");
-    }
-
-    // Compresseur
-    if(bp !== null && hp !== null && bp > 6 && hp < 12){
-      out.push("");
-      out.push("⚠️ COMPRESOR FATIGADO");
-      cert += 3;
-
-      if(amp !== null && amp > 8){
-        out.push("👉 Corriente anormal");
-        cert += 2;
-      }
-      if(tuyauAsp === "caliente"){
-        out.push("👉 Aspiración caliente: compresión sospechosa");
-        cert += 1;
-      }
-
-      out.push("");
-      out.push("PROCEDIMIENTO:");
-      out.push("1. Verificar alimentación");
-      out.push("2. Medir corriente");
-      out.push("3. Comprobar arranque");
-      out.push("4. Validar en carga");
-    }
-
-    // Condensation
-    if(hp !== null && hp > 20){
-      out.push("");
-      out.push("🔥 PROBLEMA DE CONDENSACIÓN / ALTA PRESIÓN");
-      cert += 2;
-
-      if(tempExt !== null && tempExt >= 35){
-        out.push("👉 Temperatura exterior alta: presión alta más normal");
-      } else {
-        out.push("👉 HP anormal respecto a condiciones exteriores");
-        cert += 1;
-      }
-    }
-
-    // SH / SR seuls
-    if(sh !== null && sh > 15){
-      out.push("");
-      out.push("🔥 SOBRECALENTAMIENTO ALTO");
-      out.push("👉 Falta de refrigerante probable");
-      cert += 2;
-    }
-
-    if(sh !== null && sh > 0 && sh < 3){
-      out.push("");
-      out.push("❄️ SOBRECALENTAMIENTO BAJO");
-      out.push("👉 Posible válvula de expansión / sobrealimentación");
-      cert += 2;
-    }
-
-    if(sr !== null && sr > 15){
-      out.push("");
-      out.push("💧 SUBENFRIAMIENTO ALTO");
-      out.push("👉 Posible sobrecarga o problema de condensación");
-      cert += 2;
-    }
-
-    if(sr !== null && sr > 0 && sr < 3){
-      out.push("");
-      out.push("💧 SUBENFRIAMIENTO BAJO");
-      out.push("👉 Falta de refrigerante posible");
-      cert += 2;
-    }
-
-    // Ventilateurs
-    if(ventExt === "hs"){
-      out.push("");
-      out.push("⚡ VENTILADOR EXTERIOR DEFECTUOSO");
-      out.push("👉 Riesgo de alta presión / seguridad");
-      cert += 2;
-    }
-
-    if(ventInt === "hs"){
-      out.push("");
-      out.push("❄️ VENTILADOR INTERIOR DEFECTUOSO");
-      out.push("👉 Poco caudal de aire / bajo rendimiento");
-      cert += 2;
-
-      if(dt !== null && dt < 5){
-        out.push("👉 ΔT anormal confirmado");
-        cert += 1;
-      }
-    }
-
-    // Givre
-    if(givre === "ligera"){
-      out.push("");
-      out.push("🧊 ESCARCHA LIGERA");
-      out.push("👉 Vigilar flujo de aire / carga / expansión");
-    }
-
-    if(givre === "importante"){
-      out.push("");
-      out.push("🧊 ESCARCHA IMPORTANTE");
-      out.push("👉 Posible problema en evaporador / expansión / aire");
-      cert += 1;
-
-      if(sh !== null && sh > 0 && sh < 3){
-        out.push("👉 Compatible con problema de expansión");
-        cert += 1;
-      }
-    }
-
-    // Tacto tuyaux
-    if(tuyauAsp === "fria"){
-      out.push("");
-      out.push("🌡️ Aspiración fría");
-    }
-    if(tuyauAsp === "templada"){
-      out.push("");
-      out.push("🌡️ Aspiración templada");
-    }
-    if(tuyauAsp === "caliente"){
-      out.push("");
-      out.push("🌡️ Aspiración caliente (anormal)");
-    }
-
-    if(tuyauLiquide === "caliente"){
-      out.push("");
-      out.push("🌡️ Línea líquida caliente");
-    }
-    if(tuyauLiquide === "normal"){
-      out.push("");
-      out.push("🌡️ Línea líquida normal");
-    }
-    if(tuyauLiquide === "fria"){
-      out.push("");
-      out.push("🌡️ Línea líquida fría (anormal)");
-    }
-
-    // Rendement
-    if(dt !== null && dt < 5){
-      out.push("");
-      out.push("❌ BAJO RENDIMIENTO");
-      cert += 1;
-    }
-
-    // Électrique
-    if(amp !== null && amp > 8){
-      out.push("");
-      out.push("⚡ SOBRECORRIENTE");
-      cert += 1;
-    }
-
-    if(out.length === 0){
-      out.push("ℹ️ No se detectó una falla clara.");
-      out.push("");
-      out.push("👉 Continuar con medidas complementarias.");
-    }
-  }
-
-  out.push("");
-  out.push("🎯 NIVEL DE CONFIANZA: " + (
-    cert >= 6 ? "ALTO" :
-    cert >= 3 ? "MEDIO" :
-    "BAJO"
-  ));
-
-  document.getElementById("result").innerText = out.join("\n");
+    let hist = localStorage.getItem("hist") || "";
+    hist += "<br>"+txt;
+    localStorage.setItem("hist", hist);
+    document.getElementById("historyList").innerHTML = hist;
 }
 
 function saveClient(){
-  const nombre = document.getElementById("cliente").value.trim();
-  const res = document.getElementById("result").innerText.trim();
+    let nom = document.getElementById("nom").value;
+    let tel = document.getElementById("tel").value;
 
-  if(!nombre){
-    alert("Cliente requerido");
-    return;
-  }
+    let data = localStorage.getItem("clients") || "";
+    data += "<br>"+nom+" - "+tel;
+    localStorage.setItem("clients", data);
 
-  const data = JSON.parse(localStorage.getItem("clientes") || "[]");
-  data.push({
-    nom: nombre,
-    date: new Date().toLocaleString(),
-    res: res
-  });
-
-  localStorage.setItem("clientes", JSON.stringify(data));
-  alert("Guardado ✔");
+    document.getElementById("clientList").innerHTML = data;
 }
 
-function showHistory(){
-  const data = JSON.parse(localStorage.getItem("clientes") || "[]");
-
-  if(data.length === 0){
-    alert("No hay clientes");
-    return;
-  }
-
-  let txt = "📂 HISTORIAL\n\n";
-
-  data.forEach((c, index) => {
-    txt += index + " - " + c.nom + " (" + c.date + ")\n";
-    txt += c.res + "\n\n";
-  });
-
-  alert(txt);
+window.onload = function(){
+    document.getElementById("historyList").innerHTML = localStorage.getItem("hist") || "";
+    document.getElementById("clientList").innerHTML = localStorage.getItem("clients") || "";
 }
 
-function deleteClient(){
-  const data = JSON.parse(localStorage.getItem("clientes") || "[]");
-
-  if(data.length === 0){
-    alert("No hay clientes");
-    return;
-  }
-
-  const indexRaw = prompt("Número del cliente a borrar:");
-  if(indexRaw === null) return;
-
-  const index = parseInt(indexRaw, 10);
-
-  if(Number.isNaN(index) || index < 0 || index >= data.length){
-    alert("Número inválido");
-    return;
-  }
-
-  data.splice(index, 1);
-  localStorage.setItem("clientes", JSON.stringify(data));
-  alert("Cliente eliminado ✔");
-}
 </script>
 
 </body>
