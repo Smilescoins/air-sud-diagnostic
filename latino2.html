@@ -85,7 +85,10 @@ let amp = val("amp");
 let tempExt = val("tempExt");
 let sh = val("sh");
 let sr = val("sr");
-
+if(bp==0 && hp==0 && dt==0 && amp==0 && tempExt==0 && sh==0 && sr==0){
+    document.getElementById("result").textContent = "⚠️ Introducir valores";
+    return;
+}
 let ventiloExt = document.getElementById("ventiloExt").value;
 let ventiloInt = document.getElementById("ventiloInt").value;
 let givre = document.getElementById("givre").value;
