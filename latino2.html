@@ -1,1 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HVAC Latino Pro</title>
 
+<style>
+body{font-family:Arial;background:#111;color:#fff;padding:15px}
+input,select{width:100%;padding:12px;margin:6px 0;font-size:16px}
+button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-size:18px}
+.card{background:#1c1c1c;padding:15px;margin-bottom:10px;border-radius:10px}
+.result{white-space:pre-wrap}
+</style>
+</head>
+
+<body>
+
+<h2>HVAC Latino Pro</h2>
+
+<div class="card">
+<input id="bp" placeholder="Presión baja (bar)">
+<input id="hp" placeholder="Presión alta (bar)">
+<input id="dt" placeholder="Delta T (°C)">
+<input id="amp" placeholder="Corriente (A)">
+<input id="tempExt" placeholder="Temperatura exterior (°C)">
+
+<input id="sh" placeholder="Sobrecalentamiento (°C)">
+<input id="sr" placeholder="Subenfriamiento (°C)">
+
+<select id="ventiloExt">
+<option value="">Ventilador condensador</option>
+<option value="ok">OK</option>
+<option value="hs">Falla</option>
+</select>
+
+<select id="ventiloInt">
+<option value="">Ventilador evaporador</option>
+<option value="ok">OK</option>
+<option value="hs">Falla</option>
+</select>
+
+<select id="givre">
+<option value="">Escarcha</option>
+<option value="ninguno">Ninguna</option>
+<option value="ligero">Ligera</option>
+<option value="importante">Importante</option>
+</select>
+
+<select id="tuyauAsp">
+<option value="">Tubería de aspiración</option>
+<option value="fria">Fría</option>
+<option value="templada">Templada</option>
+<option value="caliente">Caliente</option>
+</select>
+
+<select id="tuyauLiquide">
+<option value="">Línea líquida</option>
+<option value="caliente">Caliente</option>
+<option value="normal">Normal</option>
+<option value="fria">Fría</option>
+</select>
+
+<button onclick="diag()">Analizar</button>
+</div>
+
+<div class="card result" id="result">Resultado...</div>
+
+<script>
+
+function val(id){
+  return parseFloat(document.getElementById(id).value) || 0;
+}
+
+function diag(){
+
+let bp = val("bp");
+let hp = val("hp");
+let dt = val("dt");
+let amp = val("amp");
+let tempExt = val("tempExt");
+let sh = val("sh");
+let sr = val("sr");
+
+let ventiloExt = document.getElementById("ventiloExt").value;
+let ventiloInt = document.getElementById("ventiloInt").value;
+let givre = document.getElementById("givre").value;
+let tuyauAsp = document.getElementById("tuyauAsp").value;
+let tuyauLiquide = document.getElementById("tuyauLiquide").value;
+
+let txt="";
+let certitude=0;
+let incoherente=false;
+
+// incoherencias
+if(bp<3 && hp>20){incoherente=true;}
+if(ventiloExt==="hs" && hp>20){incoherente=true;}
+
+// sobrecalentamiento
+if(sh>15){
+txt+="🔥 SOBRECALENTAMIENTO ALTO\n";
+txt+="👉 Falta de refrigerante probable\n";
+certitude+=2;
+}
+
+if(sh<3 && sh>0){
+txt+="❄️ SOBRECALENTAMIENTO BAJO\n";
+txt+="👉 Problema en válvula de expansión\n";
+certitude+=2;
+}
+
+// subenfriamiento
+if(sr>15){
+txt+="💧 SUBENFRIAMIENTO ALTO\n";
+txt+="👉 Posible sobrecarga o problema de condensador\n";
+certitude+=2;
+}
+
+if(sr<3 && sr>0){
+txt+="💧 SUBENFRIAMIENTO BAJO\n";
+txt+="👉 Falta de refrigerante posible\n";
+certitude+=2;
+}
+
+// falta de refrigerante
+if(!incoherente && bp<3 && hp<10){
+txt+="\n🔴 FALTA DE REFRIGERANTE IMPORTANTE\n";
+certitude+=3;
+}
+
+// compresor
+else if(!incoherente && bp>6 && hp<12){
+txt+="\n⚠️ COMPRESOR FATIGADO\n";
+certitude+=3;
+}
+
+// condensador
+if(hp>20){
+txt+="\n🔥 PROBLEMA DE CONDENSADOR\n";
+}
+
+// ventiladores
+if(ventiloExt==="hs"){
+txt+="\n⚡ VENTILADOR CONDENSADOR DEFECTUOSO\n";
+}
+
+if(ventiloInt==="hs"){
+txt+="\n❄️ VENTILADOR EVAPORADOR DEFECTUOSO\n";
+}
+
+// incoherencia
+if(incoherente){
+txt="⚠️ DIAGNÓSTICO INCIERTO\n\n";
+txt+="Reparar problema evidente antes de continuar\n";
+certitude=1;
+}
+
+// resultado vacío
+if(txt===""){
+txt="ℹ️ Sin fallo claro detectado\n";
+}
+
+// certitud
+txt+="\n\n🎯 NIVEL DE CONFIANZA : ";
+
+if(certitude>=6){txt+="ALTO";}
+else if(certitude>=3){txt+="MEDIO";}
+else{txt+="BAJO";}
+
+document.getElementById("result").innerText=txt;
+}
+
+</script>
+
+</body>
+</html>
