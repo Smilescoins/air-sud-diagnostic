@@ -8,7 +8,7 @@
 <style>
 body{font-family:Arial;background:#111;color:#fff;padding:15px}
 input,select{width:100%;padding:12px;margin:6px 0;font-size:16px}
-button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-size:18px}
+button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-size:18px;margin-top:5px}
 .card{background:#1c1c1c;padding:15px;margin-bottom:10px;border-radius:10px}
 .result{white-space:pre-wrap}
 </style>
@@ -62,10 +62,12 @@ button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-s
 </select>
 
 <button onclick="diag()">Analizar</button>
-  <button onclick="guardarCliente()">Guardar cliente</button>
+<button onclick="guardarCliente()">Guardar cliente</button>
 <button onclick="verClientes()">Ver clientes</button>
+<button onclick="borrarClientes()">Borrar clientes</button>
 <button onclick="mostrarHistorial()">Ver historial</button>
 <button onclick="guardarHistorial(document.getElementById('result').textContent)">Guardar intervención</button>
+<button onclick="borrarHistorial()">Borrar historial</button>
 </div>
 
 <div class="card result" id="result">Resultado...</div>
@@ -85,68 +87,56 @@ let amp = val("amp");
 let tempExt = val("tempExt");
 let sh = val("sh");
 let sr = val("sr");
+
 if(bp==0 && hp==0 && dt==0 && amp==0 && tempExt==0 && sh==0 && sr==0){
     document.getElementById("result").textContent = "⚠️ Introducir valores";
     return;
 }
+
 let ventiloExt = document.getElementById("ventiloExt").value;
 let ventiloInt = document.getElementById("ventiloInt").value;
-let givre = document.getElementById("givre").value;
-let tuyauAsp = document.getElementById("tuyauAsp").value;
-let tuyauLiquide = document.getElementById("tuyauLiquide").value;
 
 let txt="";
 let certitude=0;
 let incoherente=false;
 
-// incoherencias
 if(bp<3 && hp>20){incoherente=true;}
 if(ventiloExt==="hs" && hp>20){incoherente=true;}
 
-// sobrecalentamiento
 if(sh>15){
-txt+="🔥 SOBRECALENTAMIENTO ALTO\n";
-txt+="👉 Falta de refrigerante probable\n";
+txt+="🔥 SOBRECALENTAMIENTO ALTO\n👉 Falta de refrigerante probable\n";
 certitude+=2;
 }
 
 if(sh<3 && sh>0){
-txt+="❄️ SOBRECALENTAMIENTO BAJO\n";
-txt+="👉 Problema en válvula de expansión\n";
+txt+="❄️ SOBRECALENTAMIENTO BAJO\n👉 Problema en válvula de expansión\n";
 certitude+=2;
 }
 
-// subenfriamiento
 if(sr>15){
-txt+="💧 SUBENFRIAMIENTO ALTO\n";
-txt+="👉 Posible sobrecarga o problema de condensador\n";
+txt+="💧 SUBENFRIAMIENTO ALTO\n👉 Posible sobrecarga\n";
 certitude+=2;
 }
 
 if(sr<3 && sr>0){
-txt+="💧 SUBENFRIAMIENTO BAJO\n";
-txt+="👉 Falta de refrigerante posible\n";
+txt+="💧 SUBENFRIAMIENTO BAJO\n👉 Falta de refrigerante posible\n";
 certitude+=2;
 }
 
-// falta de refrigerante
 if(!incoherente && bp<3 && hp<10){
 txt+="\n🔴 FALTA DE REFRIGERANTE IMPORTANTE\n";
 certitude+=3;
 }
 
-// compresor
 else if(!incoherente && bp>6 && hp<12){
 txt+="\n⚠️ COMPRESOR FATIGADO\n";
 certitude+=3;
 }
 
-// condensador
 if(hp>20){
 txt+="\n🔥 PROBLEMA DE CONDENSADOR\n";
 }
 
-// ventiladores
 if(ventiloExt==="hs"){
 txt+="\n⚡ VENTILADOR CONDENSADOR DEFECTUOSO\n";
 }
@@ -155,55 +145,66 @@ if(ventiloInt==="hs"){
 txt+="\n❄️ VENTILADOR EVAPORADOR DEFECTUOSO\n";
 }
 
-// incoherencia
 if(incoherente){
-txt="⚠️ DIAGNÓSTICO INCIERTO\n\n";
-txt+="Reparar problema evidente antes de continuar\n";
+txt="⚠️ DIAGNÓSTICO INCIERTO\n\nRevisar problema evidente\n";
 certitude=1;
 }
 
-// resultado vacío
 if(txt===""){
 txt="ℹ️ Sin fallo claro detectado\n";
 }
 
-// certitud
 txt+="\n\n🎯 NIVEL DE CONFIANZA : ";
 
 if(certitude>=6){txt+="ALTO";}
 else if(certitude>=3){txt+="MEDIO";}
 else{txt+="BAJO";}
 
-document.getElementById("result").innerText=txt;
+document.getElementById("result").textContent=txt;
 }
 
-</script>
-<script>
+// HISTORIAL PROPRE
 function guardarHistorial(txt){
-    let hist = localStorage.getItem("historial") || "";
-    hist += "<br>" + txt;
-    localStorage.setItem("historial", hist);
+    let hist = JSON.parse(localStorage.getItem("historial") || "[]");
+    hist.push(txt);
+    localStorage.setItem("historial", JSON.stringify(hist));
 }
 
 function mostrarHistorial(){
-    let hist = localStorage.getItem("historial") || "Sin historial";
-    alert(hist);
+    let hist = JSON.parse(localStorage.getItem("historial") || "[]");
+    if(hist.length===0){alert("Sin historial"); return;}
+    alert(hist.join("\n\n----------------\n\n"));
 }
 
+function borrarHistorial(){
+    localStorage.removeItem("historial");
+    alert("Historial borrado");
+}
+
+// CLIENTS PROPRE
 function guardarCliente(){
     let nombre = prompt("Nombre del cliente:");
+    if(!nombre) return;
+
     let tel = prompt("Teléfono:");
+    let data = JSON.parse(localStorage.getItem("clientes") || "[]");
 
-    let data = localStorage.getItem("clientes") || "";
-    data += "<br>" + nombre + " - " + tel;
-
-    localStorage.setItem("clientes", data);
+    data.push(nombre + " - " + tel);
+    localStorage.setItem("clientes", JSON.stringify(data));
 }
 
 function verClientes(){
-    let data = localStorage.getItem("clientes") || "Sin clientes";
-    alert(data);
+    let data = JSON.parse(localStorage.getItem("clientes") || "[]");
+    if(data.length===0){alert("Sin clientes"); return;}
+    alert(data.join("\n"));
 }
+
+function borrarClientes(){
+    localStorage.removeItem("clientes");
+    alert("Clientes borrados");
+}
+
 </script>
+
 </body>
 </html>
