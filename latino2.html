@@ -171,6 +171,32 @@ document.getElementById("result").innerText=txt;
 }
 
 </script>
+<script>
+function guardarHistorial(txt){
+    let hist = localStorage.getItem("historial") || "";
+    hist += "<br>" + txt;
+    localStorage.setItem("historial", hist);
+}
 
+function mostrarHistorial(){
+    let hist = localStorage.getItem("historial") || "Sin historial";
+    alert(hist);
+}
+
+function guardarCliente(){
+    let nombre = prompt("Nombre del cliente:");
+    let tel = prompt("Teléfono:");
+
+    let data = localStorage.getItem("clientes") || "";
+    data += "<br>" + nombre + " - " + tel;
+
+    localStorage.setItem("clientes", data);
+}
+
+function verClientes(){
+    let data = localStorage.getItem("clientes") || "Sin clientes";
+    alert(data);
+}
+</script>
 </body>
 </html>
