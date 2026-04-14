@@ -68,6 +68,7 @@ button{width:100%;padding:15px;background:#ff6600;color:white;border:none;font-s
 <button onclick="mostrarHistorial()">Ver historial</button>
 <button onclick="guardarHistorial(document.getElementById('result').textContent)">Guardar intervención</button>
 <button onclick="borrarHistorial()">Borrar historial</button>
+  <button onclick="generarInforme()">Generar informe</button>
 </div>
 
 <div class="card result" id="result">Resultado...</div>
@@ -203,7 +204,23 @@ function borrarClientes(){
     localStorage.removeItem("clientes");
     alert("Clientes borrados");
 }
+function generarInforme(){
 
+    let resultado = document.getElementById("result").textContent;
+
+    if(!resultado || resultado==="Resultado..." || resultado.includes("Introducir valores")){
+        alert("⚠️ Realizar diagnóstico primero");
+        return;
+    }
+
+    let fecha = new Date().toLocaleString();
+
+    let informe = "📋 INFORME HVAC\n\n";
+    informe += "Fecha: " + fecha + "\n\n";
+    informe += resultado;
+
+    alert(informe);
+}
 </script>
 
 </body>
